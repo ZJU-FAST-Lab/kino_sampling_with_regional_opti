@@ -8,5 +8,7 @@ __Authors__: [Hongkai YE](https://kyleyehh.github.io/) and [Fei GAO](https://ust
 
 __Related Paper__:
 Integrating Fast Regional Optimization into Sampling-based Kinodynamic Planning for Multirotor Flight. 
-[Arxiv Preprint](https://arxiv.org/abs/2103.05519), 
-[Video](https://github.com/kyleYehh/kino_sampling_with_regional_opti/blob/main/Integrating%20Fast%20Regional%20Optimization%20Into%20Sampling-Based%20Kinodynamic%20Planning-1.mp4)
+
+[[Preprint]](https://arxiv.org/abs/2103.05519), 
+[[Bilibili]](https://www.bilibili.com/video/BV1L5411P7GV/), 
+[[YouTube]](https://www.youtube.com/watch?v=gJ6ttY34iWA)
