@@ -2,18 +2,20 @@
 <launch>
   <arg name="odom_topic" value="/visual_slam/odom" />
   <arg name="depth_topic" value="/pcl_render_node/depth" />
-<!--   <arg name="global_env_pcd2_topic" value="cloud_pcd" /> -->
   <arg name="global_env_pcd2_topic" value="/random_forest/all_map" />
+  <!-- <arg name="map_size_x" value="20.0" />
+  <arg name="map_size_y" value="42.0" /> -->
   <arg name="map_size_x" value="58.0" />
   <arg name="map_size_y" value="100.0" />
-  <arg name="map_size_z" value="3.5" />
+  <arg name="map_size_z" value="5.5" />
   <arg name="origin_x" value=" -29.0" />
   <arg name="origin_y" value=" -50.0" />
   <arg name="origin_z" value=" -1.0" />
   <arg name="resolution" value="0.1" />
   <arg name="vel_limit" value="7.0" />
-  <arg name="acc_limit" value="5.0" />
-  <arg name="jerk_limit" value="15.0" />
+  <arg name="acc_limit" value="7.0" />
+  <arg name="jerk_limit" value="25.0" />
+  <arg name="rho_time" value="0.01" />
   <arg name="global_test" value="true" />
 
   <node pkg="state_machine" type="state_machine_node" name="state_machine_node" output="screen" > 
@@ -58,80 +60,36 @@
     <param name="occ_map/min_ray_length" value="0.1"/>
     <param name="occ_map/max_ray_length" value="6.0"/>
     <param name="occ_map/use_global_map" value="$(arg global_test)" type="bool"/>
+    <param name="occ_map/inflate_length" value="0.09" type="double"/>
 
-    <param name="pos_checker/hrz_safe_radius" value="0.4"/>
-    <param name="pos_checker/vtc_safe_radius" value="0.2"/>
-    <param name="pos_checker/copter_diag_len" value="0.4"/>
     <param name="pos_checker/dt" value="0.02"/>
-    <param name="pos_checker/inflate" value="true"/>
-    <param name="pos_checker/global_test" value="$(arg global_test)"/>
   
     <!-- kinorrt* params --> 
-    <param name="krrt/rho" value="0.01" type="double"/> <!-- the quadratic matrix R of u'Ru -->
+    <param name="krrt/rho" value="$(arg rho_time)" type="double"/> <!-- the quadratic matrix R of u'Ru -->
     <param name="krrt/vel_limit" value="$(arg vel_limit)" type="double" />
     <param name="krrt/acc_limit" value="$(arg acc_limit)" type="double" />
     <param name="krrt/jerk_limit" value="$(arg jerk_limit)" type="double" />
     <param name="krrt/tree_node_nums" value="5000" type="int" />
-    <param name="krrt/orphan_nums" value="1500" type="int" />
-    <param name="krrt/debug_vis" value="false" type="bool" />
-    <param name="krrt/radius_cost_between_two_states" value="4" type="double" /> <!-- cost tolerance -->
-    <param name="krrt/allow_orphan" value="false" type="bool" />
+    <param name="krrt/debug_vis" value="true" type="bool" />
+    <param name="krrt/radius_cost_between_two_states" value="2.5" type="double" /> <!-- cost tolerance -->
     <param name="krrt/allow_close_goal" value="false" type="bool" />
-    <param name="krrt/stop_after_first_traj_found" value="false" type="bool" />
+    <param name="krrt/stop_after_first_traj_found" value="true" type="bool" />
     <param name="krrt/rewire" value="true" type="bool" />
-    <param name="krrt/use_regional_opt" value="true" type="bool" />
+    <param name="krrt/use_regional_opt" value="false" type="bool" />
     <param name="krrt/test_convergency" value="false" type="bool" />
 
-    <param name="kfmt/rho" value="0.01" type="double"/> <!-- the quadratic matrix R of u'Ru -->
-    <param name="kfmt/vel_limit" value="$(arg vel_limit)" type="double" />
-    <param name="kfmt/acc_limit" value="$(arg acc_limit)" type="double" />
-    <param name="kfmt/jerk_limit" value="$(arg jerk_limit)" type="double" />
-    <param name="kfmt/preallocate_node_pool_num" value="2000" type="int" />
-    <param name="kfmt/preallocate_regional_node_pool_num" value="100" type="int" />
-    <param name="kfmt/sample_num_per_meter" value="4" type="int" />
-    <param name="kfmt/debug_vis" value="false" type="bool" />
-    <param name="kfmt/radius_cost_between_two_states" value="4" type="double" /> <!-- cost tolerance -->
-    <param name="kfmt/allow_close_goal" value="false" type="bool" />
-    <param name="kfmt/lambda_heu" value="1.0" type="double" />
-    <param name="kfmt/tie_breaker" value="1.0001" type="double" />
-    <param name="kfmt/search_time" value="0.1" type="double" />
-    <param name="kfmt/use_regional_opt" value="false" type="bool" />
-
-    <param name="search/max_tau" value="0.3" type="double"/>
-    <param name="search/init_max_tau" value="0.8" type="double"/>
-    <param name="search/max_vel" value="$(arg vel_limit)" type="double"/>
-    <param name="search/max_acc" value="$(arg acc_limit)" type="double"/>
-    <param name="search/w_time" value="100.0" type="double"/>
-    <param name="search/horizon" value="60.0" type="double"/>
-    <param name="search/lambda_heu" value="1" type="double"/>
-    <param name="search/resolution_astar" value="$(arg resolution)" type="double"/>
-    <param name="search/time_resolution" value="0.8" type="double"/>
-    <param name="search/allocate_num" value="100000" type="int"/>
-
-    <param name="search/jerk/max_tau" value="0.5" type="double"/>
-    <param name="search/jerk/init_max_tau" value="0.8" type="double"/>
-    <param name="search/jerk/max_vel" value="$(arg vel_limit)" type="double"/>
-    <param name="search/jerk/max_acc" value="$(arg acc_limit)" type="double"/>
-    <param name="search/jerk/w_time" value="100.0" type="double"/>
-    <param name="search/jerk/horizon" value="10.0" type="double"/>
-    <param name="search/jerk/lambda_heu" value="1" type="double"/>
-    <param name="search/jerk/resolution_astar" value="$(arg resolution)" type="double"/>
-    <param name="search/jerk/time_resolution" value="0.8" type="double"/>
-    <param name="search/jerk/allocate_num" value="100000" type="int"/>
-    <param name="search/jerk/max_jerk" value="3.0" type="double"/>
-    <param name="search/jerk/rho" value="0.01" type="double"/>
-
-    <param name="topo_prm/sample_inflate_x" value="1.0" type="double"/>
-    <param name="topo_prm/sample_inflate_y" value="3.0" type="double"/>
-    <param name="topo_prm/sample_inflate_z" value="1.0" type="double"/>
-    <param name="topo_prm/clearance" value="0.3" type="double"/>
-    <param name="topo_prm/max_sample_time" value="1.0" type="double"/>
-    <param name="topo_prm/max_sample_num" value="2000" type="int"/>
-    <param name="topo_prm/max_raw_path" value="300" type="int"/>
-    <param name="topo_prm/max_raw_path2" value="300" type="int"/>
-    <param name="topo_prm/reserve_num" value="1" type="int"/>
-    <param name="topo_prm/ratio_to_short" value="5.5" type="double"/>
-    <param name="topo_prm/parallel_shortcut" value="true" type="bool"/>
+    <param name="bikrrt/rho" value="$(arg rho_time)" type="double"/> <!-- the quadratic matrix R of u'Ru -->
+    <param name="bikrrt/vel_limit" value="$(arg vel_limit)" type="double" />
+    <param name="bikrrt/acc_limit" value="$(arg acc_limit)" type="double" />
+    <param name="bikrrt/jerk_limit" value="$(arg jerk_limit)" type="double" />
+    <param name="bikrrt/tree_node_nums" value="5000" type="int" />
+    <param name="bikrrt/debug_vis" value="true" type="bool" />
+    <param name="bikrrt/radius_cost_between_two_states" value="2.5" type="double" /> <!-- cost tolerance -->
+    <param name="bikrrt/allow_close_goal" value="false" type="bool" />
+    <param name="bikrrt/stop_after_first_traj_found" value="true" type="bool" />
+    <param name="bikrrt/rewire" value="true" type="bool" />
+    <param name="bikrrt/use_regional_opt" value="true" type="bool" />
+    <param name="bikrrt/test_convergency" value="false" type="bool" />
 
     <param name="r3/sampling_space_inflate" value="5.0" type="double"/>
     <param name="r3/ground_height" value="0.0" type="double"/>
@@ -149,16 +107,18 @@
     <param name="optimization/vel_limit" value="$(arg vel_limit)" type="double" />
     <param name="optimization/acc_limit" value="$(arg acc_limit)" type="double" />
     <param name="optimization/jerk_limit" value="$(arg jerk_limit)" type="double" />
-    <param name="optimization/max_iter_times" value="30" type="int" />
+    <param name="optimization/max_iter_times" value="15" type="int" />
     
     <!-- fsm params --> 
+    <param name="fsm/vel_limit" value="$(arg vel_limit)" type="double" />
+    <param name="fsm/acc_limit" value="$(arg acc_limit)" type="double" />
+    <param name="fsm/use_r3" value="false" type="bool"/>
     <param name="fsm/use_optimization" value="true" type="bool"/>
     <param name="fsm/replan" value="false" type="bool"/>
     <param name="fsm/replan_time" value="0.05" type="double"/>
     <param name="fsm/allow_track_err_replan" value="false" type="bool"/>
     <param name="fsm/e_stop_time_margin" value="0.5" type="double"/>
     <param name="fsm/replan_check_duration" value="3.0" type="double"/>
-    <param name="fsm/bidirection" value="false" type="bool" />
     
   </node>
     

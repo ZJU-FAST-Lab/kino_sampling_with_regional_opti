@@ -4,5 +4,6 @@
     <node pkg="rviz" type="rviz" name="rviz" output="screen" args="-d $(find state_machine)/launch/traj.rviz"/>
 
     <include file="$(find state_machine)/launch/fly_simulator.launch"/>
+    <!-- <include file="$(find state_machine)/launch/benchmark_simulator.launch"/> -->
 
 </launch>

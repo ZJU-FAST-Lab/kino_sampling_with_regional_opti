@@ -31,7 +31,7 @@ AstarPathFinder::AstarPathFinder()
 {
 }
 
-void AstarPathFinder::initGridMap(const tgk_planner::PosChecker::Ptr &pos_checker, const Eigen::Vector3i pool_size)
+void AstarPathFinder::initGridMap(const kino_planner::PosChecker::Ptr &pos_checker, const Eigen::Vector3i pool_size)
 {
     POOL_SIZE_ = pool_size;
     CENTER_IDX_ = pool_size / 2;
@@ -244,7 +244,7 @@ bool AstarPathFinder::AstarSearch(const double step_size, Vector3d start_pt, Vec
                     }
                 }
         ros::Time time_2 = ros::Time::now();
-        if ((time_2 - time_1).toSec() > 0.0002)
+        if ((time_2 - time_1).toSec() > 0.001)
         {
             // ROS_WARN("Failed in A star path searching !!! 1 ms time limit exceeded.");
             return false;

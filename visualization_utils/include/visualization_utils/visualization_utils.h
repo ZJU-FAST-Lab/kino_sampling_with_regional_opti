@@ -7,14 +7,14 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <Eigen/Eigen>
 
-#define FirstTraj 1
-#define BestTraj 2
-#define FinalTraj 3
-#define TrackedTraj 4
+#define RED 1
+#define BLUE 2
+#define GRAY 3
+#define YELLOW 4
 #define TreeTraj 5
-#define OptimizedTraj 6
-#define FMTTraj 7
-#define FMTTrajWithout 8
+#define BLACK 6
+#define GREEN 7
+#define ORANGE 8
 #define FORWARD_REACHABLE_POS 1
 #define BACKWARD_REACHABLE_POS 2
 
@@ -68,6 +68,7 @@ public:
     void visualizeText(const std::vector<std::string> &texts, const std::vector<Eigen::Vector3d> &positions, ros::Time local_time);
     void visualizePoints(const std::vector<StatePVA> &x, ros::Time local_time);
     void visualizeTrajList(const std::vector<std::vector<StatePVA>> &x, ros::Time local_time);
+    void visualizeCurrExpectedState(const StatePVA& x, ros::Time local_time);
 
     typedef std::shared_ptr<VisualRviz> Ptr;
 
@@ -116,6 +117,10 @@ private:
     ros::Publisher balls_pub_;
     ros::Publisher texts_pub_;
     ros::Publisher points_pub_;
+
+    ros::Publisher curr_exp_pos_pub_;
+    ros::Publisher curr_exp_vel_pub_;
+    ros::Publisher curr_exp_acc_pub_;
 };
 
 

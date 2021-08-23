@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<launch>
-
-  <node pkg="state_machine" type="generate_learning_samples_node" name="generate_learning_samples_node" output="screen"/> 
-
-</launch>

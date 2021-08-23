@@ -35,11 +35,8 @@ include_directories(
 )
 
 add_library(${PROJECT_NAME}
-  src/topo_prm.cpp
+  src/bi_krrt.cpp
   src/krrtplanner.cpp
-  src/kinodynamic_astar.cpp
-  src/kd_astar_jerk.cpp
-  src/kfmt.cpp
   src/kdtree.c
   src/raycast.cpp
   src/bias_sampler.cpp

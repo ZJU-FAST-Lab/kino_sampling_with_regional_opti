@@ -16,7 +16,7 @@
 // #include <ompl/base/DiscreteMotionValidator.h>
 #include <ros/ros.h>
 
-namespace tgk_planner
+namespace kino_planner
 {
   struct R3Node
   {
@@ -144,5 +144,5 @@ namespace tgk_planner
 
     bool use_ompl_;
   };
-} // namespace tgk_planner
+} // namespace kino_planner
 #endif

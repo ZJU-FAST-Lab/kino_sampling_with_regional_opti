@@ -10,11 +10,11 @@
   <arg name="map_size_y" value="100.0"/>
   <arg name="map_size_z" value=" 5.5"/>
 
-  <arg name="init_x" value="-3.0"/>
-  <arg name="init_y" value="-3.0"/>
+  <arg name="init_x" value="0.0"/>
+  <arg name="init_y" value="-21.0"/>
   <arg name="init_z" value="0.0"/> 
 
-  <arg name="forest" value="1"/> 
+  <arg name="forest" value="0"/> 
 
   <!-- map generation -->
   <node pkg="map_generator" name="random_forest" type="random_forest" output="screen" if="$(arg forest)">    
@@ -35,7 +35,7 @@
     <param name="CircleShape/upper_circle_rad" value="2.0"/>        
     <param name="sensing/rate"   value="1.0"/>        
   </node>
-  <include file="$(find mockamap)/launch/mockamap.launch" unless="$(arg forest)"/>
+  <include file="$(find mockamap)/launch/fly_map.launch" unless="$(arg forest)"/>
 	
   <node pkg="so3_quadrotor_simulator" type="quadrotor_simulator_so3" name="quadrotor_simulator_so3" output="screen">
         <param name="rate/odom" value="200.0"/>

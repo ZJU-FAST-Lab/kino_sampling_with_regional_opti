@@ -2,7 +2,7 @@
 
 #include <ros/ros.h>
 
-using namespace tgk_planner;
+using namespace kino_planner;
 
 int main(int argc, char** argv) 
 {

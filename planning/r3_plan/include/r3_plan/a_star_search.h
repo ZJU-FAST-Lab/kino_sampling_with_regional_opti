@@ -11,7 +11,7 @@
 class AstarPathFinder
 {	
 private:
-	tgk_planner::PosChecker::Ptr pos_checker_ptr_;;
+	kino_planner::PosChecker::Ptr pos_checker_ptr_;;
 
 	inline void coord2gridIndexFast(const double x, const double y, const double z, int &id_x, int &id_y, int &id_z);
 
@@ -49,7 +49,7 @@ public:
 	AstarPathFinder();
 	~AstarPathFinder();
 
-	void initGridMap(const tgk_planner::PosChecker::Ptr &pos_checker, const Eigen::Vector3i pool_size);
+	void initGridMap(const kino_planner::PosChecker::Ptr &pos_checker, const Eigen::Vector3i pool_size);
 
 	bool AstarSearch(const double step_size, Eigen::Vector3d start_pt, Eigen::Vector3d end_pt);
 

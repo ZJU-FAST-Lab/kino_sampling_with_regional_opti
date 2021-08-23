@@ -37,7 +37,7 @@ using std::ceil;
 using std::isnan;
 using std::isinf;
 
-namespace tgk_planner
+namespace kino_planner
 {
 class OccMap
 {
@@ -58,8 +58,8 @@ public:
   void setOccupancy(const Eigen::Vector3d &pos);
   int getVoxelState(const Eigen::Vector3d &pos);
   int getVoxelState(const Eigen::Vector3i &id);
-  double getDistance(const Eigen::Vector3d &pos);
-  double getDistance(const Eigen::Vector3i &id);
+  bool isInflateOccupied(const Eigen::Vector3d &pos);
+  bool isInflateOccupied(const Eigen::Vector3i &id);
   float nearestObs(const double &x, const double &y, const double &z, float &x_obs, float &y_obs, float &z_obs);
 	ros::Time getLocalTime() { return latest_odom_time_; };
 
@@ -74,7 +74,7 @@ public:
   typedef shared_ptr<OccMap> Ptr;
   
 private:
-  std::vector<double> occupancy_buffer_;  // 0 is free, 1 is occupied
+  std::vector<double> occupancy_buffer_; 
 
   // map property
   Eigen::Vector3d min_range_, max_range_;  // map range in pos
@@ -110,10 +110,10 @@ private:
 	ros::Publisher pose_vis_pub_, twist_vis_pub_, acc_vis_pub_;
 
   typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, nav_msgs::Odometry> SyncPolicyImageOdom;
-	typedef shared_ptr<message_filters::Synchronizer<SyncPolicyImageOdom>> SynchronizerImageOdom;
+	typedef shared_ptr<message_filters::Synchronizer<SyncPolicyImageOdom> > SynchronizerImageOdom;
   SynchronizerImageOdom sync_image_odom_;
-  shared_ptr<message_filters::Subscriber<nav_msgs::Odometry>> odom_sub_;
-  shared_ptr<message_filters::Subscriber<sensor_msgs::Image>> depth_sub_;
+  shared_ptr<message_filters::Subscriber<nav_msgs::Odometry> > odom_sub_;
+  shared_ptr<message_filters::Subscriber<sensor_msgs::Image> > depth_sub_;
 	void depthOdomCallback(const sensor_msgs::ImageConstPtr& disp_msg, 
                          const nav_msgs::OdometryConstPtr& odom, 
                          const Eigen::Matrix4d& T_ic, 
@@ -178,11 +178,10 @@ private:
   pcl::KdTreeFLANN<pcl::PointXYZ> pc_kdtree_;
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered_;
 
-  /* ESDF */
-  template <typename F_get_val, typename F_set_val>
-  void fillESDF(F_get_val f_get_val, F_set_val f_set_val, int start, int end, int dim);
-  void updateESDF3d(const Eigen::Vector3i &min_esdf, const Eigen::Vector3i &max_esdf);
-  std::vector<double> tmp_buffer1_, tmp_buffer2_, distance_buffer_;
+  /* inflation */
+  double infalte_length_;
+  std::vector<bool> inflate_occupancy_;
+  void inflate(const Eigen::Vector3i &min_idx, const Eigen::Vector3i &max_idx);
   
 public:
   void getSurroundPts(const Eigen::Vector3d& pos, Eigen::Vector3d pts[2][2][2],
@@ -250,17 +249,17 @@ inline int OccMap::getVoxelState(const Eigen::Vector3i &id)
   return occupancy_buffer_[idxToAddress(id)] > min_occupancy_log_ ? 1 : 0;
 }
 
-inline double OccMap::getDistance(const Eigen::Vector3d &pos)
+inline bool OccMap::isInflateOccupied(const Eigen::Vector3d &pos)
 {
   Eigen::Vector3i id;
   posToIndex(pos, id);
   if (!isInMap(id)) return -1; // TODO -1 means out of map
-  return distance_buffer_[idxToAddress(id)];
+  return inflate_occupancy_[idxToAddress(id)] == true;
 }
 
-inline double OccMap::getDistance(const Eigen::Vector3i &id)
+inline bool OccMap::isInflateOccupied(const Eigen::Vector3i &id)
 {
-  return distance_buffer_[idxToAddress(id)];
+  return inflate_occupancy_[idxToAddress(id)] == true;
 }
 
 inline bool OccMap::isInLocalMap(const Eigen::Vector3d &pos)
@@ -344,6 +343,6 @@ inline Eigen::Vector3i OccMap::getMapSize()
   return grid_size_; 
 }
 
-}  // namespace tgk_planner
+}  // namespace kino_planner
 
 #endif

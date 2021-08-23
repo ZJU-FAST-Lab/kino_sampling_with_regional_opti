@@ -51,7 +51,7 @@ bool IntegratorBVP::calTauStarDouble()
   p[4] =(- x0_[0]*x0_[0] + 2.0*x0_[0]*x1_[0] - x1_[0]*x1_[0] 
         - x0_[1]*x0_[1] + 2.0*x0_[1]*x1_[1] - x1_[1]*x1_[1] 
         - x0_[2]*x0_[2] + 2.0*x0_[2]*x1_[2] - x1_[2]*x1_[2]) * 36.0 * rho_;
-  std::set<double> roots = RootFinder::solvePolynomial(p, DBL_EPSILON, DBL_MAX, 1e-6);
+  std::set<double> roots = RootFinder::solvePolynomial(p, 0.01, 100, 1e-6);
   
   bool result = false;
   double tau = DBL_MAX;
@@ -134,7 +134,7 @@ bool IntegratorBVP::solveTriple()
 //   p[4] = -1800*rho_*(x0_[0]*x0_[0] + x0_[1]*x0_[1] + x0_[2]*x0_[2] 
 //                 - 2*x0_[0]*x1_[0] + x1_[0]*x1_[0] - 2*x0_[1]*x1_[1] 
 //                   + x1_[1]*x1_[1] - 2*x0_[2]*x1_[2] + x1_[2]*x1_[2]);
-//   std::set<double> roots = RootFinder::solvePolynomial(p, DBL_EPSILON, DBL_MAX, FLT_EPSILON);
+//   std::set<double> roots = RootFinder::solvePolynomial(p, 0.01, 100, FLT_EPSILON);
   
 //   bool result = false;
 //   double tau = DBL_MAX;
@@ -201,8 +201,7 @@ bool IntegratorBVP::calTauStarTriple()
   p[4] = - 72*rho_*t7;
   p[5] = - 2800*rho_*t8;
   p[6] = - 3600*rho_*t9;
-  std::set<double> roots = RootFinder::solvePolynomial(p, DBL_EPSILON, DBL_MAX, 1e-6);
-  
+  std::set<double> roots = RootFinder::solvePolynomial(p, 0.01, 100, 1e-6);
   bool result = false;
   double tau = DBL_MAX;
   double cost = DBL_MAX;
@@ -253,7 +252,7 @@ bool IntegratorBVP::calTauStarTripleAccUnknown()
   p[4] = - 48*t3;
   p[5] = - 320*t4;
   p[6] = - 1600*t5;
-  std::set<double> roots = RootFinder::solvePolynomial(p, DBL_EPSILON, DBL_MAX, 1e-6);
+  std::set<double> roots = RootFinder::solvePolynomial(p, 0.01, 100, 1e-6);
   
   bool result = false;
   double tau = DBL_MAX;
@@ -312,6 +311,85 @@ bool IntegratorBVP::solveTripleAccUnknown()
   return result;
 }
 
+bool IntegratorBVP::calTauStarTripleInitialAccUnknown()
+{
+  Eigen::Vector3d x0_012 = x0_.head(3), x0_345 = x0_.segment(3, 3), x0_678 = x0_.tail(3);
+  Eigen::Vector3d x1_012 = x1_.head(3), x1_345 = x1_.segment(3, 3), x1_678 = x1_.tail(3);
+  Eigen::Vector3d x0_diff_x1_012 = x0_012 - x1_012, x0_plus_x1_345 = 3*x0_345 + 5*x1_345;
+  
+  double t1 = rho_*x1_678.dot(x1_678);
+  double t2 = rho_*(7*x1_345.dot(x1_678) + 3*x1_678.dot(x0_345));
+  double t3 = rho_*(8*x1_345.dot(x1_345) + 3*x0_345.dot(x0_345) - 5*x1_678.dot(x0_diff_x1_012) + 9*x0_345.dot(x1_345));
+  double t4 = rho_*x0_diff_x1_012.dot(x0_plus_x1_345);
+  double t5 = rho_*x0_diff_x1_012.dot(x0_diff_x1_012);
+
+  VectorXd p(7);
+  p[0] = 1.0;
+  p[1] = 0.0;
+  p[2] = - 8*t1;
+  p[3] = + 16*t2;
+  p[4] = - 48*t3;
+  p[5] = - 320*t4;
+  p[6] = - 1600*t5;
+  std::set<double> roots = RootFinder::solvePolynomial(p, 0.01, 100, 1e-6);
+  
+  bool result = false;
+  double tau = DBL_MAX;
+  double cost = DBL_MAX;
+  
+  for (const double& root : roots) 
+  {
+    double root2 = root*root;
+    double root3 = root2*root;
+    double root4 = root3*root;
+    double root5 = root4*root;
+    double root6 = root5*root;
+    
+    double current = (root6 + 320*t5 + 80*root*t4 + 16*root2*t3 - 8*root3*t2 + 8*root4*t1) / root5;
+
+    if (current < cost) 
+    {
+      tau = root;
+      cost = current;
+      result = true;
+    }
+  }
+
+  tau_star_ = tau;
+  cost_star_ = cost;
+  return result;
+}
+
+bool IntegratorBVP::solveTripleInitialAccUnknown()
+{
+  bool result = calTauStarTripleInitialAccUnknown();
+  
+  double t2 = tau_star_*tau_star_;
+  double t3 = tau_star_*t2;
+  double t4 = tau_star_*t3;
+  double t5 = tau_star_*t4;
+  coeff_(0, 0) = -(8*x0_[0] + 5*tau_star_*x1_[3] - t2*x1_[6] - 8*x1_[0] + 3*tau_star_*x0_[3])/(3*t5); 
+  coeff_(1, 0) = -(8*x0_[1] + 5*tau_star_*x1_[4] - t2*x1_[7] - 8*x1_[1] + 3*tau_star_*x0_[4])/(3*t5); 
+  coeff_(2, 0) = -(8*x0_[2] + 5*tau_star_*x1_[5] - t2*x1_[8] - 8*x1_[2] + 3*tau_star_*x0_[5])/(3*t5);
+  coeff_(0, 1) = -(-10*x0_[0] - 4*tau_star_*x0_[3] + t2*x1_[6] + 10*x1_[0] - 6*tau_star_*x1_[3])/(2*t4);
+  coeff_(1, 1) = -(-10*x0_[1] - 4*tau_star_*x0_[4] + t2*x1_[7] + 10*x1_[1] - 6*tau_star_*x1_[4])/(2*t4);
+  coeff_(2, 1) = -(-10*x0_[2] - 4*tau_star_*x0_[5] + t2*x1_[8] + 10*x1_[2] - 6*tau_star_*x1_[5])/(2*t4); 
+  coeff_(0, 2) = 0.0; 
+  coeff_(1, 2) = 0.0; 
+  coeff_(2, 2) = 0.0; 
+  coeff_(0, 3) = -(20*x0_[0] + 12*tau_star_*x0_[3] - t2*x1_[6] - 20*x1_[0] + 8*tau_star_*x1_[3])/(6*t2); 
+  coeff_(1, 3) = -(20*x0_[1] + 12*tau_star_*x0_[4] - t2*x1_[7] - 20*x1_[1] + 8*tau_star_*x1_[4])/(6*t2); 
+  coeff_(2, 3) = -(20*x0_[2] + 12*tau_star_*x0_[5] - t2*x1_[8] - 20*x1_[2] + 8*tau_star_*x1_[5])/(6*t2); 
+  coeff_(0, 4) = x0_[3]; 
+  coeff_(1, 4) = x0_[4];
+  coeff_(2, 4) = x0_[5]; 
+  coeff_(0, 5) = x0_[0]; 
+  coeff_(1, 5) = x0_[1]; 
+  coeff_(2, 5) = x0_[2];
+
+  return result;
+}
+
 /* 
 minimize Inte(1 + jerk^T * rho * jerk, 0, tau)
 */
@@ -335,7 +413,7 @@ bool IntegratorBVP::calTauStarTripleVelAccUnknown()
   p[4] = - 60*t2;
   p[5] = - 160*t1;
   p[6] = - 100*t0;
-  std::set<double> roots = RootFinder::solvePolynomial(p, DBL_EPSILON, DBL_MAX, 1e-6);
+  std::set<double> roots = RootFinder::solvePolynomial(p, 0.01, 100, 1e-6);
   bool result = false;
   double tau = DBL_MAX;
   double cost = DBL_MAX;
@@ -418,4 +496,25 @@ void IntegratorBVP::calCoeffFromTau(double tau, CoefficientMat &coeff)
   coeff(2, 5) = x0_[2];
 }
 
+double IntegratorBVP::calCostAccKnown(const VectorXd &x0, const VectorXd &x1, double T)
+{
+  double t1 = 3*(x0[6]*x0[6] + x0[7]*x0[7] + x0[8]*x0[8] + x1[6]*x1[6] + x1[7]*x1[7] + x1[8]*x1[8]);
+  double t2 = t1 - 2*(x0[6]*x1[6] + x0[7]*x1[7] + x0[8]*x1[8]);
+  double t3 = 3*(x0[3]*x0[6] + x0[4]*x0[7] + x0[5]*x0[8] - x1[3]*x1[6] - x1[4]*x1[7] - x1[5]*x1[8]);
+  double t4 = t3 + 2*(x0[6]*x1[3] + x0[7]*x1[4] + x0[8]*x1[5] - x0[3]*x1[6] - x0[4]*x1[7] - x0[5]*x1[8]);
+  double t5 = 8*(x0[3]*x0[3] + x0[4]*x0[4] + x0[5]*x0[5] + x1[3]*x1[3] + x1[4]*x1[4] + x1[5]*x1[5]);
+  double t6 = t5 + 5*((x0[0]-x1[0])*(x0[6]-x1[6]) + (x0[1]-x1[1])*(x0[7]-x1[7]) + (x0[2]-x1[2])*(x0[8]-x1[8]));
+  double t7 = t6 + 14*(x0[3]*x1[3] + x0[4]*x1[4] + x0[5]*x1[5]);
+  double t8 = (x0[0]-x1[0])*(x0[3]+x1[3]) + (x0[1]-x1[1])*(x0[4]+x1[4]) + (x0[2]-x1[2])*(x0[5]+x1[5]);
+  double t9 = (x0[0]-x1[0])*(x0[0]-x1[0]) + (x0[1]-x1[1])*(x0[1]-x1[1]) + (x0[2]-x1[2])*(x0[2]-x1[2]);
+
+  double T2 = T*T;
+  double T3 = T2*T;
+  double T4 = T3*T;
+  double T5 = T4*T;
+  double T6 = T5*T;
+
+  double cost = (T6 + rho_*(720*t9 + 720*T*t8 + 24*T2*t7 + 24*T3*t4 + 3*T4*t2)) / T5;
+  return cost;
+}
 }

@@ -1,6 +1,6 @@
 #include "r3_plan/r3_planner.h"
 
-namespace tgk_planner
+namespace kino_planner
 {
   size_t R3Planner::sampling(const Eigen::Vector3d &start, const Eigen::Vector3d &goal)
   {
@@ -354,4 +354,4 @@ namespace tgk_planner
   //   return false;
   // }
 
-} // namespace tgk_planner
+} // namespace kino_planner

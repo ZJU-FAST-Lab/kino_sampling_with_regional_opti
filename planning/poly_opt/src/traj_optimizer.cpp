@@ -1,7 +1,7 @@
 #include "poly_opt/traj_optimizer.h"
 #include <chrono>
 
-namespace tgk_planner 
+namespace kino_planner 
 {
 TrajOptimizer::TrajOptimizer(const ros::NodeHandle &node)
 {
@@ -50,7 +50,7 @@ bool TrajOptimizer::solve_S_H()
     // {
     //   vector<StatePVA> vis_x;
     //   optimized_traj_.sampleWholeTrajectory(&vis_x);
-    //   vis_ptr_->visualizeStates(vis_x, OptimizedTraj, pos_checker_ptr_->getLocalTime());
+    //   vis_ptr_->visualizeStates(vis_x, BLACK, pos_checker_ptr_->getLocalTime());
     //   getchar();
     // }
     
@@ -63,9 +63,9 @@ bool TrajOptimizer::solve_S_H()
 
 bool TrajOptimizer::solve_S_H_O()
 {
-  double weight_smooth = 3;
-  double weight_close = 97;
-  double weight_obs = 200;
+  double weight_smooth = 5;
+  double weight_close = 90;
+  double weight_obs = 400;
 
   bool result(false);
   
@@ -93,13 +93,13 @@ bool TrajOptimizer::solve_S_H_O()
     }
     else
     {
-      weight_smooth = 1.0;
-      weight_close = (100 - weight_smooth) / 2.0;
-      weight_obs = weight_close * 2;
+      // weight_smooth = 1.0;
+      // weight_close = (100 - weight_smooth) / 2.0;
+      // weight_obs = weight_close * 2;
 
       // vector<StatePVA> vis_x;
       // optimized_traj_.sampleWholeTrajectory(&vis_x);
-      // vis_ptr_->visualizeStates(vis_x, OptimizedTraj, pos_checker_ptr_->getLocalTime());
+      // vis_ptr_->visualizeStates(vis_x, BLACK, pos_checker_ptr_->getLocalTime());
       // vector<StatePVA> traj_wpts;
       // optimized_traj_.getWpts(&traj_wpts);
       // vis_ptr_->visualizeSampledState(traj_wpts, pos_checker_ptr_->getLocalTime());
@@ -155,11 +155,11 @@ bool TrajOptimizer::solveRegionalOpt(std::vector<pair<int, int>> &seg_num_obs_si
 
   // vector<StatePVA> vis_x;
   // front_end_traj_.sampleWholeTrajectory(&vis_x);
-  // vis_ptr_->visualizeStates(vis_x, OptimizedTraj, pos_checker_ptr_->getLocalTime());
+  // vis_ptr_->visualizeStates(vis_x, BLACK, pos_checker_ptr_->getLocalTime());
   // vector<StatePVA> traj_wpts;
   // front_end_traj_.getWpts(&traj_wpts);
   // vis_ptr_->visualizeSampledState(traj_wpts, pos_checker_ptr_->getLocalTime());
-  // cout << "front end traj max v: " << front_end_traj_.getMaxVelRate() << "max a: " << front_end_traj_.getMaxAccRate() << endl;
+  // cout << "front end traj max v: " << front_end_traj_.getMaxVelRate() << " max a: " << front_end_traj_.getMaxAccRate() << endl;
   // getchar();
 
   std::vector<std::vector<Eigen::Vector3d>> drag_lines;
@@ -175,7 +175,7 @@ bool TrajOptimizer::solveRegionalOpt(std::vector<pair<int, int>> &seg_num_obs_si
 
     // vector<StatePVA> vis_x;
     // optimized_traj_.sampleWholeTrajectory(&vis_x);
-    // vis_ptr_->visualizeStates(vis_x, OptimizedTraj, pos_checker_ptr_->getLocalTime());
+    // vis_ptr_->visualizeStates(vis_x, BLACK, pos_checker_ptr_->getLocalTime());
     // vector<StatePVA> traj_wpts;
     // optimized_traj_.getWpts(&traj_wpts);
     // vis_ptr_->visualizeSampledState(traj_wpts, pos_checker_ptr_->getLocalTime());
@@ -207,7 +207,7 @@ bool TrajOptimizer::solveRegionalOpt(std::vector<pair<int, int>> &seg_num_obs_si
     { 
       result = reTiming(optimized_traj_);
       if (!result)
-        ROS_WARN("[regional opt] collision feasible but retiming false");
+        // ROS_WARN("[regional opt] collision feasible but retiming false");
       return result;
     }
     else
@@ -225,8 +225,13 @@ bool TrajOptimizer::solveRegionalOpt(std::vector<pair<int, int>> &seg_num_obs_si
           grid_paths.insert(grid_paths.begin(), grid_path.begin(), grid_path.end());
           pos_checker_ptr_->getRegionalAttractPts(optimized_traj_, grid_path, collide_timestamp[i], seg_num_obs_size, attract_pts, t_s, t_e);
         }
+        else 
+        {
+          // ROS_WARN_STREAM("a star search fail, from: " << collide_pts[i].first.transpose() << " to " << collide_pts[i].second.transpose());
+          return false;
+        }
       }
-      vis_ptr_->visualizeKnots(grid_paths, pos_checker_ptr_->getLocalTime());
+      // vis_ptr_->visualizeKnots(grid_paths, pos_checker_ptr_->getLocalTime());
       //re-organize seg_num_obs_size
       int seg_num = optimized_traj_.getPieceNum();
       int obs_size[seg_num] = {0};
@@ -246,7 +251,7 @@ bool TrajOptimizer::solveRegionalOpt(std::vector<pair<int, int>> &seg_num_obs_si
       
       // vector<StatePVA> vis_x;
       // optimized_traj_.sampleWholeTrajectory(&vis_x);
-      // vis_ptr_->visualizeStates(vis_x, OptimizedTraj, pos_checker_ptr_->getLocalTime());
+      // vis_ptr_->visualizeStates(vis_x, BLACK, pos_checker_ptr_->getLocalTime());
       // vector<StatePVA> traj_wpts;
       // optimized_traj_.getWpts(&traj_wpts);
       // vis_ptr_->visualizeSampledState(traj_wpts, pos_checker_ptr_->getLocalTime());
@@ -421,7 +426,7 @@ bool TrajOptimizer::solve_S()
     tryQPCloseForm();
     // vector<StatePVA> vis_x;
     // optimized_traj_.sampleWholeTrajectory(&vis_x);
-    // vis_ptr_->visualizeStates(vis_x, FMTTraj, pos_checker_ptr_->getLocalTime());
+    // vis_ptr_->visualizeStates(vis_x, GREEN, pos_checker_ptr_->getLocalTime());
     bool violate(true);
     std::set<int> indices;
     violate = getCollideSegIdx(optimized_traj_, indices);
@@ -930,11 +935,11 @@ bool TrajOptimizer::reTiming(Trajectory& traj)
 {
   if (!traj.checkMaxAccRate(acc_limit_))
   {
-    const int ite_time(4);
+    const int ite_time(8);
     int n(0);
     while (n < ite_time)
     {
-      // ROS_WARN_STREAM("max acc: " << optimized_traj_.getMaxAccRate());
+      // ROS_WARN_STREAM("max acc: " << traj.getMaxAccRate());
       double k(0.90);
       // double k = min(0.98, acc_limit_ / optimized_traj_.getMaxAccRate());
       traj.scaleTime(k);
@@ -944,7 +949,7 @@ bool TrajOptimizer::reTiming(Trajectory& traj)
     }
     if (n >= ite_time)
     {
-      // ROS_ERROR_STREAM("max acc: " << optimized_traj_.getMaxAccRate());
+      // ROS_ERROR_STREAM("max acc: " << traj.getMaxAccRate());
       return false;
     }
   }
@@ -972,12 +977,12 @@ bool TrajOptimizer::reTiming(Trajectory& traj)
 
   if (!traj.checkMaxJerkRate(jerk_limit_))
   {
-    const int ite_time(4);
+    const int ite_time(8);
     int n(0);
     while (n < ite_time)
     {
       // ROS_WARN_STREAM("max jerk: " << optimized_traj_.getMaxJerkRate());
-      double k(0.90);
+      double k(0.9);
       // double k = min(0.98, acc_limit_ / optimized_traj_.getMaxJerkRate());
       traj.scaleTime(k);
       if (traj.checkMaxJerkRate(jerk_limit_))

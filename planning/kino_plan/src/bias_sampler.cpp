@@ -1,6 +1,6 @@
 #include "kino_plan/bias_sampler.h"
 
-namespace tgk_planner
+namespace kino_planner
 {
 
 void BiasSampler::findSamplingSpace(const vector<pair<Vector3d, Vector3d>>& segs, 

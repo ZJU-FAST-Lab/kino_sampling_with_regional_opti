@@ -14,7 +14,7 @@ using Eigen::Matrix3d;
 using Eigen::Vector2d;
 using Eigen::Vector3d;
 
-namespace tgk_planner
+namespace kino_planner
 {
 
 class BiasSampler
@@ -182,5 +182,5 @@ private:
 
 };
 
-} // namespace tgk_planner
+} // namespace kino_planner
 #endif

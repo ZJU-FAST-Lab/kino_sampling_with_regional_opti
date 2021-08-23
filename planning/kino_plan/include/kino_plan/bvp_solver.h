@@ -8,6 +8,7 @@
 #define TRIPLE_INTEGRATOR 3
 #define ACC_KNOWN 0
 #define ACC_UNKNOWN 1
+#define INITIAL_ACC_UNKNOWN 2
 
 namespace BVPSolver
 {
@@ -50,6 +51,8 @@ public:
       if (type == ACC_UNKNOWN)
         // final state acc free
         return solveTripleAccUnknown();
+      else if (type == INITIAL_ACC_UNKNOWN)
+        return solveTripleInitialAccUnknown();
       else
         // final state acc fixed
         return solveTriple();
@@ -84,7 +87,7 @@ public:
   };
 
   void calCoeffFromTau(double tau, CoefficientMat &coeff);
-
+  double calCostAccKnown(const VectorXd &x0, const VectorXd &x1, double T);
 
 private:
   VectorXd x0_, x1_;
@@ -100,6 +103,9 @@ private:
 
   bool calTauStarTripleAccUnknown();
   bool solveTripleAccUnknown();
+
+  bool calTauStarTripleInitialAccUnknown();
+  bool solveTripleInitialAccUnknown();
 
   bool calTauStarTripleVelAccUnknown();
   bool solveTripleVelAccUnknown();

@@ -38,7 +38,7 @@ public:
     Piece() = default;
 
     // Constructor from duration and coefficient
-    Piece(double dur, CoefficientMat coeffs) : duration(dur)
+    Piece(double dur, const CoefficientMat &coeffs) : duration(dur)
     {
         double t = 1.0;
         for (int i = TrajOrder; i >= 0; i--)
@@ -49,7 +49,7 @@ public:
     }
 
     // Constructor from boundary condition and duration
-    Piece(BoundaryCond boundCond, double dur) : duration(dur)
+    Piece(const BoundaryCond &boundCond, double dur) : duration(dur)
     {
         // The BoundaryCond matrix boundCond = [p(0),v(0),a(0),p(T),v(T),a(T)]
         double t1 = dur;
@@ -495,7 +495,7 @@ public:
 
     inline void sampleOneSeg(std::vector< StatePVA >* vis_x) const 
     {
-        double dt = 0.005;
+        double dt = 0.01;
         for (double t = 0.0; t < duration; t += dt) 
         {
             Eigen::Vector3d pos, vel, acc;
@@ -527,34 +527,30 @@ public:
         }
     }
 
-    // for 5th degree polynomial
-    inline double calCost(const double &rho)
+    // for 5th degree polynomial， cost = integral(j^T rho j) + tau
+    inline double calCost(const double &rho) const
     {
-        AccCoefficientMat acc_coe = getAccCoeffMat();
-        double cost(0.0);
-        int n_dim = acc_coe.rows();
         double tau2 = duration * duration;
         double tau3 = tau2 * duration;
         double tau4 = tau3 * duration;
         double tau5 = tau4 * duration;
-        double tau6 = tau5 * duration;
-        for (int dim = 0; dim < n_dim; ++dim)
+
+        CoefficientMat coeff = getCoeffMat();
+        Eigen::Matrix<double, 6, 6> B = Eigen::Matrix<double, 6, 6>::Zero(6, 6);
+        B(0, 0) = 720 * tau5;
+        B(1, 1) = 192 * tau3;
+        B(2, 2) = 36 * duration;
+        B(0, 1) = B(1, 0) = 360 * tau4;
+        B(0, 2) = B(2, 0) = 120 * tau3;
+        B(1, 2) = B(2, 1) = 72 * tau2;
+        double cost(0.0);
+        for (int i=0; i<3; i++)
         {
-            double cost_curr_dim = acc_coe(dim, 0) * acc_coe(dim, 0) * tau6 / 7.0 
-                                 + acc_coe(dim, 0) * acc_coe(dim, 1) * tau5 / 3.0
-                                 + acc_coe(dim, 0) * acc_coe(dim, 2) * tau4 * 2.0 / 5.0
-                                 + acc_coe(dim, 0) * acc_coe(dim, 3) * tau3 / 2.0
-                                 + acc_coe(dim, 1) * acc_coe(dim, 1) * tau4 / 5.0
-                                 + acc_coe(dim, 1) * acc_coe(dim, 2) * tau3 / 2.0
-                                 + acc_coe(dim, 1) * acc_coe(dim, 3) * tau2 * 2.0 / 3.0
-                                 + acc_coe(dim, 2) * acc_coe(dim, 2) * tau2 / 3.0
-                                 + acc_coe(dim, 2) * acc_coe(dim, 3) * duration
-                                 + acc_coe(dim, 3) * acc_coe(dim, 3);
-            cost += cost_curr_dim;
+            cost += coeff.row(i) * B * coeff.row(i).transpose();
         }
         cost *= rho;
-        cost += 1.0;
-        cost *= duration;
+        cost += duration;
+
         return cost;
     }
 
@@ -900,6 +896,17 @@ public:
         {
             pieces[i].sampleOneSeg(vis_x);
         }
+    }
+    
+    inline double calCost(const double &rho, double* seg_cost) const
+    {
+        double cost(0.0);
+        for (int i = 0; i < getPieceNum(); i++)
+        {
+            seg_cost[i] = pieces[i].calCost(rho);
+            cost += seg_cost[i];
+        }
+        return cost;
     }
 
     inline void getWpts(std::vector< StatePVA >* wpts)

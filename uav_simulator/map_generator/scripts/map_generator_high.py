@@ -426,38 +426,7 @@ class map_generator(object):
 
     def make_map(self):
         rospy.loginfo("start making map")
-        # # # scene 0 : square room
-        # self.dimx = 20
-        # self.dimy = 20
-        # self.diz = 2.0
-        # for x in range(-4, 5):
-        #     for y in range(-4, 5):
-        #         # if x == 0 and y == 0:
-        #         #     continue
-        #         self.add_box([0.8, 0.8, self.dimz], [x * 2, y * 2, self.dimz / 2])
 
-        # # scene 0.1 : square room random
-        # CHANGE!
-        # self.dimx = 22
-        # self.dimy = 22
-        # self.diz = 2.0
-        # for x in range(-4, 5):
-        #     for y in range(-4, 5):
-        #         for num in range(np.random.randint(1,3)):
-        #             dx, dy = (np.random.rand(2) - 0.5) * 1.2
-        #             sizex, sizey = (np.random.rand(2) - 0.5) * 1.2
-        #             sizez = np.array([1.0, (0.6 + 2 * np.random.rand())]).min() * self.dimz
-        #             dz = -1.5 * np.random.rand()
-        #             # if x == 0 and y == 0:i
-        #             #     continue
-        #             if np.random.rand() < 0.1:
-        #                 continue
-        #             elif np.random.rand() < 0.7:
-        #                 self.add_box_on_floor([0.8 + sizex, 0.8 + sizey, sizez], [x * 2 + dx, y * 2 + dy])
-        #             else:
-        #                 self.add_cylinder_on_floor([(0.8 + sizex) / 3, self.dimz], [x * 2 + dx, y * 2 + dy])
-
-        # # scene 1 : corridor
         self.make_custom_corridor()
 
         # floor
@@ -474,45 +443,11 @@ class map_generator(object):
         # # button
         self.add_box([self.dimx, 0.10, self.dimz], [0, -self.dimy / 2, self.dimz / 2.0])
 
-        # # add items
-        # # # sofa 1
-        # self.add_box([2.5, 0.2, 1.1], [-4, -3.8, 0.65])
-        # self.add_box([2.5, 0.5, 0.5], [-4, -3.35, 0.3])
 
-        # # table 1
-        # self.add_box([1.5, 0.8, 0.6], [-4, -2.30, 0.3])
-
-        # # table 2
-        # self.add_cylinder([0.8, 0.6], [-3, -0.2, 0.4])
-
-        # # chair 1
-        # self.add_box([0.6, 0.6, 0.5], [-4.3, -0.5, 0.3])
-        # self.add_box([0.1, 0.6, 1.4], [-4.55, -0.5, 0.75])
-
-        # self.add_box([0.6, 0.6, 0.5], [-1.7, -0.5, 0.3])
-        # self.add_box([0.1, 0.6, 1.4], [-1.45, -0.5, 0.75])
-
-        # # washing machine
-        # self.add_box([0.6, 0.9, 1.0], [-4.2, 2.3, 0.5])
-
-
-        # # bed 1
-        # self.add_box([2.5, 2.0, 0.5], [4.65, -2.0, 0.25])
-        # # nightstand 1
-        # self.add_box([0.5, 0.6, 0.6], [5.65, -0.3, 0.3])
-
-        # # wall 0
-        # self.add_box([0.8, 3.0, 1.2], [2.0, 2.4, 0.6])
-        # # wall 1 / 2 / 3 (door)
-        # self.add_box([3.5, 0.3, 2.0], [-4.3, 1.8, 1.0])
-        # self.add_box([1.2, 0.3, 2.0], [-0.45, 1.8, 1.0])
-        # self.add_box([0.3, 2.2, 2.0], [0, 2.9, 1.0])
-
-        # #simple scene 1 : krrt fails
-        # self.add_box([0.5, 8, self.dimz], [1.25, -1.25, self.dimz / 2])
-        # self.add_box([10, 0.4, self.dimz], [0, -0.9, self.dimz / 2])
-        # self.add_box([2, 2.5, 2], [4, 2.5, 1])
-
+        self.add_box([0.6, 4.4, 2], [1.5, -6, 1])
+        self.add_box([0.6, 4.4, 2], [-1.5, 6, 1])
+        self.add_box([4, 0.6, 2], [3, -4, 1])
+        self.add_box([4, 0.6, 2], [-3, 4, 1])
 
 
 
@@ -536,6 +471,36 @@ class map_generator(object):
 
         return True
     
+
+    def make_trapdoor(self):
+        rospy.loginfo("start making trap door")
+        self.add_box([0.6, 2, 2], [2.5, -1.5, 1])
+        self.add_box([0.6, 2, 2], [-2.5, 1.5, 1])
+        self.add_box([2.0, 0.6, 2], [3.3, -0.3, 1])
+        self.add_box([2.0, 0.6, 2], [-3.3, 0.3, 1])
+        self.add_box([0.6, 2.8, 2], [-1.0, -1.1, 1])
+        self.add_box([0.6, 1.2, 2], [-1.0, 1.9, 1])
+        self.add_box([0.6, 2.8, 2], [1.0, 1.1, 1])
+        self.add_box([0.6, 1.2, 2], [1.0, -1.9, 1])
+
+        self.map = PointCloud2()
+        self.map.height = 1
+        self.map.width = len(self.points)
+        self.map.fields = [
+            PointField('x', 0, PointField.FLOAT32, 1),
+            PointField('y', 4, PointField.FLOAT32, 1),
+            PointField('z', 8, PointField.FLOAT32, 1)]
+        self.map.point_step = 12 #12
+        self.map.row_step = 12 * len(self.points)
+        self.map.is_bigendian = False
+        self.map.is_dense = False
+        self.map.data = np.asarray(self.points, np.float32).tostring()
+        self.map.header.frame_id = "map"
+
+        self.has_map = True
+        rospy.loginfo("finish making trap door")
+
+
 def main():
     
     rospy.init_node('random_map_sensing', anonymous=True)
@@ -543,10 +508,10 @@ def main():
     map_maker = map_generator()
     map_maker.init_params()
     map_maker.make_map()
+    # map_maker.make_trapdoor()
     while not rospy.is_shutdown():
         map_maker.publish_map()
         map_maker.rate.sleep()
 
 if __name__ == '__main__':
     main()
-

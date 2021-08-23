@@ -17,8 +17,6 @@ find_package(catkin REQUIRED COMPONENTS
     quadrotor_msgs
     visualization_utils
     self_msgs_and_srvs
-    bspline_opt
-    bspline
 )
 
 find_package(Eigen3 REQUIRED)
@@ -58,20 +56,6 @@ add_executable(pub_goal_node
     src/pub_goal_node.cpp
 )
 target_link_libraries(pub_goal_node
-    ${catkin_LIBRARIES}
-)
-
-add_executable(test_bvp_node
-    src/test_bvp_node.cpp
-)
-target_link_libraries(test_bvp_node
-    ${catkin_LIBRARIES}
-)
-
-add_executable(test_planner_node
-    src/test_planners_node.cpp
-)
-target_link_libraries(test_planner_node
     ${catkin_LIBRARIES}
 )
 

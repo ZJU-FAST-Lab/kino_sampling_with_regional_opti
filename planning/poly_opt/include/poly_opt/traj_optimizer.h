@@ -11,7 +11,7 @@ using namespace std;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-namespace tgk_planner 
+namespace kino_planner 
 {
 class TrajOptimizer
 {

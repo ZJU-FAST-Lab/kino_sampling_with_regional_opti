@@ -32,7 +32,7 @@ include_directories(
   ${PCL_INCLUDE_DIRS}
 )
 
-add_library( poly_opt 
+add_library( poly_opt  
   src/traj_optimizer.cpp
 )
 target_link_libraries( poly_opt

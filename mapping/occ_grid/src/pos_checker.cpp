@@ -1,7 +1,7 @@
 #include "occ_grid/pos_checker.h"
 #include <chrono>
 
-namespace tgk_planner
+namespace kino_planner
 {
 bool PosChecker::validateASample(const StatePVA &sample)
 {
@@ -51,11 +51,6 @@ bool PosChecker::validateASample(const StatePVA &sample)
   // ros::Time t2 = ros::Time::now();
   // ROS_WARN_STREAM("validate a sample, " <<n << " pos, "<< (t2-t1).toSec() * 1e6 << " us");
   return true;
-}
-
-bool PosChecker::validatePt(const Vector3d &pos)
-{
-  return (occ_map_->getVoxelState(pos) == 0);
 }
 
 inline void PosChecker::getCheckPos(const Vector3d &pos, const Vector3d &vel,
@@ -153,6 +148,8 @@ void PosChecker::getlineGrids(const Vector3d &s_p, const Vector3d &e_p, vector<V
 bool PosChecker::checkPolySeg(const Piece &seg)
 {
   double tau = seg.getDuration();
+  Vector3d head_vel = seg.getVel(0.0);
+  Vector3d tail_vel = seg.getVel(tau);
   for (double t = 0.0; t <= tau; t += dt_)
   {
     Vector3d pos, vel, acc;
@@ -162,14 +159,8 @@ bool PosChecker::checkPolySeg(const Piece &seg)
     if (!checkState(pos, vel, acc))
       return false;
       
-    // check curvature, ugly 
-    if (t > 0.3 && t < tau - 0.3)
-    {
-      double tmp = vel.norm() * vel.norm() * vel.norm();
-      double k = (vel.cross(acc)).norm() / tmp;
-      if (k >= 8)
-        return false;
-    }
+    if (vel.dot(head_vel) < 0 && vel.dot(tail_vel) < 0)
+      return false;
   }
   return true;
 };
@@ -182,6 +173,8 @@ bool PosChecker::checkPolySeg(const Piece &seg, double t_s, double t_e)
     ROS_WARN_STREAM("Check time violates duration, tau: " << tau << ", t_s: " << t_s << ", t_e: " << t_e);
     return false;
   }
+  Vector3d head_vel = seg.getVel(t_s);
+  Vector3d tail_vel = seg.getVel(t_e);
   for (double t = t_s; t <= t_e; t += dt_)
   {
     Vector3d pos, vel, acc;
@@ -190,11 +183,9 @@ bool PosChecker::checkPolySeg(const Piece &seg, double t_s, double t_e)
     acc = seg.getAcc(t);
     if (!checkState(pos, vel, acc))
       return false;
-    // if (t > 0.3 && t < t_e - 0.3)
-    // {
-    //   if (!curvatureValid(vel, acc))
-    //     return false;
-    // }
+    
+    if (vel.dot(head_vel) < 0 && vel.dot(tail_vel) < 0)
+      return false;
   }
   return true;
 };
@@ -207,6 +198,8 @@ bool PosChecker::checkPolySeg(const Piece &seg, vector<pair<Vector3d, Vector3d>>
   bool result(true);
   bool zigzag(false);
   Vector3d last_pos = seg.getPos(0.0);
+  Vector3d head_vel = seg.getVel(0.0);
+  Vector3d tail_vel = seg.getVel(tau);
 
   for (double t = 0.0; t <= tau; t += dt_)
   {
@@ -216,17 +209,12 @@ bool PosChecker::checkPolySeg(const Piece &seg, vector<pair<Vector3d, Vector3d>>
     acc = seg.getAcc(t);
     if (!zigzag)
     {
-      if (t > 0.3 && t < tau - 0.3)
+      if (vel.dot(head_vel) < 0 && vel.dot(tail_vel) < 0)
       {
-        double tmp = vel.norm() * vel.norm() * vel.norm();
-        double k = (vel.cross(acc)).norm() / tmp;
-        if (k >= 6)
-        {
-          line.first = pos;
-          line.second = Eigen::Vector3d(0.0, 0.0, -1.0);
-          traversal_lines.push_back(line);
-          zigzag = true;
-        }
+        line.first = pos;
+        line.second = Eigen::Vector3d(0.0, 0.0, -1.0);
+        traversal_lines.push_back(line);
+        zigzag = true;
       }
     }
 
@@ -257,6 +245,8 @@ bool PosChecker::checkPolySeg(const Piece &seg, pair<Vector3d, Vector3d> &collid
   bool zigzag(false);
   bool first_collision(true);
   Vector3d last_pos = seg.getPos(0.0);
+  Vector3d head_vel = seg.getVel(0.0);
+  Vector3d tail_vel = seg.getVel(tau);
 
   for (double t = 0.0; t <= tau; t += dt_)
   {
@@ -266,15 +256,12 @@ bool PosChecker::checkPolySeg(const Piece &seg, pair<Vector3d, Vector3d> &collid
     acc = seg.getAcc(t);
     if (!zigzag)
     {
-      if (t > 0.3 && t < tau - 0.3)
+      if (vel.dot(head_vel) < 0 && vel.dot(tail_vel) < 0)
       {
-        double tmp = vel.norm() * vel.norm() * vel.norm();
-        double k = (vel.cross(acc)).norm() / tmp;
-        if (k >= 6)
-        {
-          zigzag = true;
-          result = false;
-        }
+        zigzag = true;
+        need_region_opt = false;
+        result = false;
+        return false;
       }
     }
 
@@ -288,7 +275,7 @@ bool PosChecker::checkPolySeg(const Piece &seg, pair<Vector3d, Vector3d> &collid
       if (!first_collision)
       {
         need_region_opt = false;
-        return result;
+        return false;
       }
       result = false;
       is_valid = false;
@@ -299,7 +286,8 @@ bool PosChecker::checkPolySeg(const Piece &seg, pair<Vector3d, Vector3d> &collid
     {
       is_valid = true;
       collide_pts.second = pos;
-      need_region_opt = true;
+      if (!zigzag)
+        need_region_opt = true;
       first_collision = false;
       t_s_e.second = t;
     }
@@ -448,7 +436,7 @@ bool PosChecker::getPolyTrajAttractPts(const Trajectory &front_traj, const Traje
 {
   bool result(true);
   int n_seg = traj.getPieceNum();
-  Vector3d pos, vel, acc, attract_pt, front_traj_pt;
+  Vector3d pos, attract_pt, front_traj_pt;
   pair<int, int> snos;
   for (int i = 0; i < n_seg; ++i)
   {
@@ -460,8 +448,7 @@ bool PosChecker::getPolyTrajAttractPts(const Trajectory &front_traj, const Traje
     for (double t = 0.0; t < tau; t += dt_)
     {
       pos = traj[i].getPos(t);
-      vel = traj[i].getVel(t);
-      if (!checkState(pos, vel, acc))
+      if (!validatePosSurround(pos))
       {
         result = false;
         if (first_obs || t - collide_t_last > 0.2)
@@ -469,7 +456,8 @@ bool PosChecker::getPolyTrajAttractPts(const Trajectory &front_traj, const Traje
           first_obs = false;
           collide_t_last = t;
           front_traj_pt = front_traj[i].getPos(t);
-          attract_pt = front_traj_pt + (front_traj_pt - pos);
+          double len = (front_traj_pt - pos).norm();
+          attract_pt = front_traj_pt + (front_traj_pt - pos) * max(len, 2.0);
           att_pts.emplace_back(attract_pt[0], attract_pt[1], attract_pt[2]);
           t_s.emplace_back(std::max(t - 0.2, 0.0));
           t_e.emplace_back(std::min(t + 0.2, tau));
@@ -590,4 +578,4 @@ void PosChecker::getRegionalAttractPts(const Trajectory &input_traj,
 
 
 
-} // namespace tgk_planner
+} // namespace kino_planner

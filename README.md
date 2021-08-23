@@ -1,7 +1,37 @@
-# kRRT* with fast RO
-Front-end: Kinodynamic RRT* integrated with fast regional optimization. 
+# kRRT* with Bidirectional Search and Regional Optimization
+
+##  About
+Planning global kinodynamic trajectories for multirotor flight. 
+Suits Long range and trapped starts & goals.
+
+__Authors__: [Hongkai YE](https://kyleyehh.github.io/) and [Fei GAO](https://ustfei.com/) from the [ZJU Fast Lab](http://www.kivact.com/).
+
+__Related Paper__:
+Efficient Sampling-based Kinodynamic Planning with Regional Optimization and Bidirectional Search for Multirotors (Preprint coming soon).
+
+<p align="center">
+  <img src="misc/392_2x.gif" width = "480" height = "203"/>
+</p>
+
+<p align="center">
+  <img src="misc/trap3.gif" width = "480" height = "209"/>
+</p>
+
+For full videos, please watch:
+[[Bilibili]](https://www.bilibili.com/video/BV1sq4y1D73J/), 
+[[YouTube]](https://www.youtube.com/watch?v=1VMAB_p2uqs&t=1s)
+
+### Methods
+Front-end: 
+
+1.Kinodynamic RRT* integrated with fast regional optimization. 
 <p align="center">
   <img src="misc/front-end-vis.gif" width = "900" height = "258"/>
+</p>
+
+2.Bidirectional search.
+<p align="center">
+  <img src="misc/bitree_growing_Trim_Slomo.gif" width = "684" height = "320"/>
 </p>
 
 Back-end: Quadratic programming incorporating obstacles.
@@ -9,17 +39,6 @@ Back-end: Quadratic programming incorporating obstacles.
   <img src="misc/back-end-vis.gif" width = "708" height = "263"/>
 </p>
 
-##  About
-Planning global kinodynamic trajectories for multirotor flight.
-
-__Authors__: [Hongkai YE](https://kyleyehh.github.io/) and [Fei GAO](https://ustfei.com/) from the [ZJU Fast Lab](http://www.kivact.com/).
-
-__Related Paper__:
-Integrating Fast Regional Optimization into Sampling-based Kinodynamic Planning for Multirotor Flight. 
-
-[[Preprint]](https://arxiv.org/abs/2103.05519), 
-[[Bilibili]](https://www.bilibili.com/video/BV1L5411P7GV/), 
-[[YouTube]](https://www.youtube.com/watch?v=gJ6ttY34iWA)
 
 ## Run The Simulation
 The repo has been tested on Ubuntu 16.04 and 18.04 with ros-desktop-full installation.
@@ -38,7 +57,7 @@ We recommand create a new catkin workspace:
 Change directory to _~/krrt_with_ro_ws/src_ and clone the repo:
 ```
 ~$ cd krrt_with_ro_ws/src
-~/krrt_with_ro_ws/src$ git clone https://github.com/kyleYehh/kino_sampling_with_regional_opti
+~/krrt_with_ro_ws/src$ git clone git@github.com:ZJU-FAST-Lab/kino_sampling_with_regional_opti.git
 ```
 Change directory to _~/krrt_with_ro_ws_ and make:
 ```
@@ -61,9 +80,5 @@ Open another terminal, set up the environment and launch the planner:
 If everything goes well, you should be able to navigate the drone as the gif shows below. (Click 3D Nav Goal in the Rviz panel or press g in keyboard to selecet goal. Click down both left and right mouse buttons and drag to change the goal altitude.)
 
 <p align="center">
-  <img src="misc/fly_sim.gif" width = "720" height = "406"/>
+  <img src="misc/fly_sim_3x.gif" width = "803" height = "400"/>
 </p>
-
-
-## Differences from the paper
-1. Instead of inflating the occupancy map, we compute a distance field which provides the distance to the nearest obstacle for each grid, and any grid with a distance less than a predetermined length is considered occupied.

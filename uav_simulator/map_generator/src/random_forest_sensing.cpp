@@ -196,13 +196,13 @@ void RandomMapGenerate()
          for(int s = -halfWidNum; s < halfWidNum; s ++ )
          {
             // make pilars hollow
-            if (r > -halfWidNum + 2 && r < (halfWidNum - 3))
-            {
-               if(s > -halfWidNum + 2 && s < (halfWidNum - 3))
-               {
-                  continue;
-               }
-            }
+            // if (r > -halfWidNum + 2 && r < (halfWidNum - 3))
+            // {
+            //    if(s > -halfWidNum + 2 && s < (halfWidNum - 3))
+            //    {
+            //       continue;
+            //    }
+            // }
             // rotate 
             double th = atan2((double)s, (double)r);
             int len = sqrt(s*s + r*r);

@@ -10,23 +10,23 @@
   <arg name="map_size_y" value="55.0"/>
   <arg name="map_size_z" value=" 3.5"/>
 
-  <arg name="init_x" value="-3.0"/>
-  <arg name="init_y" value="-3.0"/>
+  <arg name="init_x" value="0.0"/>
+  <arg name="init_y" value="0.0"/>
   <arg name="init_z" value="0.0"/> 
 
   <arg name="forest" value="1"/> 
 
   <!-- map generation -->
-  <!--env for front-end compare-->
-  <node pkg="map_generator" name="random_forest" type="random_forest" output="screen" if="$(arg forest)">    
+  <!-- env for front-end compare-->
+  <!-- <node pkg="map_generator" name="random_forest" type="random_forest" output="screen" if="$(arg forest)">    
     <remap from="~odometry"   to="$(arg odom_topic)"/>    
     <param name="init_state_x"   value="$(arg init_x)"/>
     <param name="init_state_y"   value="$(arg init_y)"/>
     <param name="map/x_size"     value="$(arg map_size_x)" />
     <param name="map/y_size"     value="$(arg map_size_y)" />
     <param name="map/z_size"     value="$(arg map_size_z)" />
-    <param name="map/obs_num"    value="70"/>    
-    <param name="map/circle_num"    value="60"/>   
+    <param name="map/obs_num"    value="80"/>    
+    <param name="map/circle_num"    value="90"/>   
     <param name="map/resolution" value="0.1"/>        
     <param name="ObstacleShape/lower_rad" value="0.4"/>
     <param name="ObstacleShape/upper_rad" value="2.0"/>
@@ -36,7 +36,7 @@
     <param name="CircleShape/upper_circle_rad" value="2.0"/>        
     <param name="sensing/rate"   value="1.0"/>        
   </node>
-  <include file="$(find mockamap)/launch/mockamap.launch" unless="$(arg forest)"/>
+  <include file="$(find mockamap)/launch/mockamap.launch" unless="$(arg forest)"/> -->
 
   <!--env for w/ w/o compare-->
   <!-- <node pkg="map_generator" type="map_generator_high.py" name="random_forest" output="screen">
@@ -58,7 +58,7 @@
 
   </node> -->
 
-  <!-- the param of wall in front-end benchmark-->>
+  <!-- the param of wall in front-end benchmark-->
   <!-- <node pkg="map_generator" type="map_generator_high.py" name="random_forest" output="screen">
     <param name="map/x_size" value="16.0" type="double"/>
     <param name="map/y_size" value="70.0" type="double"/>
@@ -67,7 +67,7 @@
     <param name="resolution" value="0.1" type="double"/>
     <param name="map/random" value="true" type="bool"/>
     
-    <param name="gap_num" value="4" type="int" />
+    <param name="gap_num" value="6" type="int" />
     <param name="narrow_gap_width" value="0.75" type="double"/>
 
     <param name="wall_num" value="3" type="int" />
@@ -77,6 +77,42 @@
     <param name="rand_obs_num" value="0" type="int"/>
   </node> -->
 
+  <!-- the param of real-world experiments-->
+  <node pkg="map_generator" type="map_generator_high.py" name="random_forest" output="screen">
+    <param name="map/x_size" value="10.0" type="double"/>
+    <param name="map/y_size" value="20.0" type="double"/>
+    <param name="map/z_size" value="2.5" type="double"/>
+    <param name="map/end_blank" value="4.5" type="double"/>
+    <param name="resolution" value="0.1" type="double"/>
+    <param name="map/random" value="true" type="bool"/>
+    
+    <param name="gap_num" value="2" type="int" />
+    <param name="narrow_gap_width" value="0.8" type="double"/>
+
+    <param name="wall_num" value="2" type="int" />
+    <param name="wall_width" value="0.6" type="double" />
+
+    <param name="rand_obs_scale" value="1.5" type="double"/>
+    <param name="rand_obs_num" value="0" type="int"/>
+  </node>
+  <!-- <node pkg="map_generator" name="random_forest" type="random_forest" output="screen">    
+    <remap from="~odometry"   to="$(arg odom_topic)"/>    
+    <param name="init_state_x"   value="$(arg init_x)"/>
+    <param name="init_state_y"   value="$(arg init_y)"/>
+    <param name="map/x_size"     value="5.0" />
+    <param name="map/y_size"     value="11.0" />
+    <param name="map/z_size"     value="2.5" />
+    <param name="map/obs_num"    value="20"/>    
+    <param name="map/circle_num"    value="4"/>   
+    <param name="map/resolution" value="0.1"/>        
+    <param name="ObstacleShape/lower_rad" value="0.6"/>
+    <param name="ObstacleShape/upper_rad" value="1.0"/>
+    <param name="ObstacleShape/lower_hei" value="1.5"/>
+    <param name="ObstacleShape/upper_hei" value="2.0"/>        
+    <param name="CircleShape/lower_circle_rad" value="0.4"/>        
+    <param name="CircleShape/upper_circle_rad" value="0.6"/>        
+    <param name="sensing/rate"   value="1.0"/>        
+  </node> -->
 	
   <node pkg="so3_quadrotor_simulator" type="quadrotor_simulator_so3" name="quadrotor_simulator_so3" output="screen">
         <param name="rate/odom" value="200.0"/>

@@ -11,6 +11,8 @@ using std::list;
 #define CLOSED 'a'
 #define OPEN 'b'
 #define UNVISITED 'c'
+#define START_TREE 's'
+#define GOAL_TREE 'g'
 
 typedef Eigen::Matrix<double, 9, 1> StatePVA;
 typedef Eigen::Matrix<double, 6, 1> StatePV;
@@ -24,9 +26,21 @@ struct RRTNode {
   StatePVA x;
   double cost_from_start;
   double tau_from_start;
+  double cost_from_parent;
+  double tau_from_parent;
   Piece poly_seg;
   list<RRTNode*> children;
-  RRTNode(): parent(NULL), cost_from_start(DBL_MAX), tau_from_start(DBL_MAX){};
+  char tree_type;
+  RRTNode(): parent(NULL), cost_from_start(DBL_MAX), tau_from_start(DBL_MAX), cost_from_parent(0.0), tau_from_parent(0.0), tree_type(START_TREE) {};
+  int countDescendant()
+  {
+    int n(0);
+    for (const auto &child : children)
+    {
+      n += child->countDescendant();
+    }
+    return n;
+  };
 };
 typedef RRTNode* RRTNodePtr;
 typedef vector<RRTNodePtr, Eigen::aligned_allocator<RRTNodePtr>> RRTNodePtrVector;

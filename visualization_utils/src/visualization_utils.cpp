@@ -51,6 +51,10 @@ VisualRviz::VisualRviz(const ros::NodeHandle &nh) : nh_(nh)
     balls_pub_ = nh_.advertise<visualization_msgs::MarkerArray>("/nearest_obs_balls", 1);
     texts_pub_ = nh_.advertise<visualization_msgs::MarkerArray>("/texts", 1);
     points_pub_ = nh_.advertise<visualization_msgs::Marker>("/points", 1);
+
+    curr_exp_pos_pub_ = nh_.advertise<visualization_msgs::Marker>("/curr_exp_pos", 1);
+    curr_exp_vel_pub_ = nh_.advertise<visualization_msgs::Marker>("/curr_exp_vel", 1);
+    curr_exp_acc_pub_ = nh_.advertise<visualization_msgs::Marker>("/curr_exp_acc", 1);
 }
 
 void VisualRviz::visualizeStates(const std::vector<StatePVA> &x, int trajectory_type, ros::Time local_time)
@@ -93,9 +97,9 @@ void VisualRviz::visualizeStates(const std::vector<StatePVA> &x, int trajectory_
     pos_point.pose.orientation.w = 1.0;
     pos_point.id = 100;
     pos_point.type = visualization_msgs::Marker::LINE_STRIP;
-    pos_point.scale.x = 0.17;
-    pos_point.scale.y = 0.17;
-    pos_point.scale.z = 0.17;
+    pos_point.scale.x = 0.15;
+    pos_point.scale.y = 0.15;
+    pos_point.scale.z = 0.15;
 
     vel_vec.header.frame_id = "map";
     vel_vec.header.stamp = local_time;
@@ -119,43 +123,43 @@ void VisualRviz::visualizeStates(const std::vector<StatePVA> &x, int trajectory_
     
     switch (trajectory_type) 
     {
-    case FirstTraj:
+    case RED:
         pos_point.color = Color::Red();
         pos_point.color.a = 1.0;
         vel_vec.color = Color::Red();
         vel_vec.color.a = 1.0;
         acc_vec.color = Color::Red();
-        acc_vec.color.a = 0.05;
+        acc_vec.color.a = 0.2;
         first_traj_pos_point_pub_.publish(pos_point);
         first_traj_vel_vec_pub_.publish(vel_vec);
         first_traj_acc_vec_pub_.publish(acc_vec);
         break;
 
-    case BestTraj:
+    case BLUE:
         pos_point.color = Color::Blue();
         pos_point.color.a = 1.0;
         vel_vec.color = Color::Blue();
         vel_vec.color.a = 1.0;
         acc_vec.color = Color::Blue();
-        acc_vec.color.a = 0.15;
+        acc_vec.color.a = 0.17;
         best_traj_pos_point_pub_.publish(pos_point);
         best_traj_vel_vec_pub_.publish(vel_vec);
         best_traj_acc_vec_pub_.publish(acc_vec);
         break;
 
-    case FinalTraj:
-        pos_point.color = Color::Blue();
+    case GRAY:
+        pos_point.color = Color::Gray();
         pos_point.color.a = 1.0;
-        vel_vec.color = Color::Blue();
+        vel_vec.color = Color::Gray();
         vel_vec.color.a = 1.0;
-        acc_vec.color = Color::Blue();
-        acc_vec.color.a = 0.10;
+        acc_vec.color = Color::Gray();
+        acc_vec.color.a = 0.20;
         final_traj_pos_point_pub_.publish(pos_point);
         final_traj_vel_vec_pub_.publish(vel_vec);
         final_traj_acc_vec_pub_.publish(acc_vec);
         break;
 
-    case TrackedTraj:
+    case YELLOW:
         pos_point.color = Color::Yellow();
         pos_point.color.a = 1.0;
         vel_vec.color = Color::Yellow();
@@ -165,31 +169,31 @@ void VisualRviz::visualizeStates(const std::vector<StatePVA> &x, int trajectory_
         tracked_traj_pos_point_pub_.publish(pos_point);
         break;
 
-    case OptimizedTraj:
-        pos_point.color = Color::Red();
+    case BLACK:
+        pos_point.color = Color::Black();
         pos_point.color.a = 1.0;
-        vel_vec.color = Color::Red();
+        vel_vec.color = Color::Black();
         vel_vec.color.a = 1.0;
-        acc_vec.color = Color::Red();
+        acc_vec.color = Color::Black();
         acc_vec.color.a = 0.15;
         optimized_traj_pos_point_pub_.publish(pos_point);
         optimized_traj_vel_vec_pub_.publish(vel_vec);
         optimized_traj_acc_vec_pub_.publish(acc_vec);
         break;
 
-    case FMTTraj:
+    case GREEN:
         pos_point.color = Color::Chartreuse();
         pos_point.color.a = 1.0;
         vel_vec.color = Color::Chartreuse();
         vel_vec.color.a = 1.0;
         acc_vec.color = Color::Chartreuse();
-        acc_vec.color.a = 0.05;
+        acc_vec.color.a = 0.25;
         fmt_traj_pos_point_pub_.publish(pos_point);
         fmt_traj_vel_vec_pub_.publish(vel_vec);
         fmt_traj_acc_vec_pub_.publish(acc_vec);
         break;
 
-    case FMTTrajWithout:
+    case ORANGE:
         pos_point.color = Color::Orange();
         pos_point.color.a = 1.0;
         vel_vec.color = Color::Orange();
@@ -202,8 +206,8 @@ void VisualRviz::visualizeStates(const std::vector<StatePVA> &x, int trajectory_
         break;
 
     case TreeTraj:
-        pos_point.color = Color::SteelBlue();
-        pos_point.color.a = 1.0;
+        pos_point.color = Color::Green();
+        pos_point.color.a = 0.6;
         pos_point.scale.x = 0.03;
         pos_point.scale.y = 0.03;
         pos_point.scale.z = 0.03;
@@ -239,10 +243,10 @@ void VisualRviz::visualizePoints(const std::vector<StatePVA> &x, ros::Time local
     pos_point.pose.orientation.w = 1.0;
     pos_point.id = 100;
     pos_point.type = visualization_msgs::Marker::POINTS;
-    pos_point.scale.x = 0.05;
-    pos_point.scale.y = 0.05;
-    pos_point.scale.z = 0.05;
-    pos_point.color = Color::Black();
+    pos_point.scale.x = 0.1;
+    pos_point.scale.y = 0.1;
+    pos_point.scale.z = 0.1;
+    pos_point.color = Color::Yellow();
     pos_point.color.a = 0.8;
     points_pub_.publish(pos_point);
 }
@@ -797,30 +801,6 @@ void VisualRviz::visualizeTrajList(const std::vector<std::vector<StatePVA>> &x, 
 
 void VisualRviz::visualizeText(const std::vector<std::string> &texts, const std::vector<Eigen::Vector3d> &positions, ros::Time local_time)
 {
-    // visualization_msgs::MarkerArray mk_ary;
-    // visualization_msgs::Marker text_mk;
-    // text_mk.action = visualization_msgs::Marker::DELETEALL;
-    // mk_ary.markers.push_back(text_mk);
-    // text_mk.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
-    // text_mk.header.frame_id = "map";
-    // text_mk.header.stamp = local_time;
-    // text_mk.ns = "texts";
-    // text_mk.action = visualization_msgs::Marker::ADD;
-    // text_mk.lifetime = ros::Duration(0);
-    // text_mk.color.a = 1.0;
-    // text_mk.scale.z = 4;
-    // text_mk.color = Color::Blue();
-    // for (size_t i = 0; i < texts.size(); ++i)
-    // {
-    //     text_mk.text = texts[i];
-    //     text_mk.pose.position.x = positions[i][0];
-    //     text_mk.pose.position.y = positions[i][1];
-    //     text_mk.pose.position.z = positions[i][2];
-    //     text_mk.id = i;
-    //     mk_ary.markers.push_back(text_mk);
-    // }
-    // texts_pub_.publish(mk_ary);
-
     visualization_msgs::MarkerArray mk_ary;
     visualization_msgs::Marker text_mk;
     text_mk.action = visualization_msgs::Marker::DELETEALL;
@@ -832,11 +812,11 @@ void VisualRviz::visualizeText(const std::vector<std::string> &texts, const std:
     text_mk.action = visualization_msgs::Marker::ADD;
     text_mk.lifetime = ros::Duration(0);
     text_mk.color.a = 1.0;
-    text_mk.scale.z = 3;
+    text_mk.scale.z = 2.5;
 
-    double y_diff(- 22);
+    double y_diff(- 16);
     double vertical_diff(2);
-    double x_base(33), z_base(4);
+    double x_base(15), z_base(4);
     /*line 1*/
     int line_num = 3;
     text_mk.color = Color::Black();
@@ -848,7 +828,7 @@ void VisualRviz::visualizeText(const std::vector<std::string> &texts, const std:
     mk_ary.markers.push_back(text_mk);
 
     text_mk.color = Color::Black();
-    text_mk.text = "Jerk Cost";
+    text_mk.text = "Cost";
     text_mk.pose.position.x = x_base + vertical_diff * line_num;
     text_mk.pose.position.y = y_diff;
     text_mk.pose.position.z = z_base + vertical_diff * line_num;
@@ -859,7 +839,7 @@ void VisualRviz::visualizeText(const std::vector<std::string> &texts, const std:
     /*line 2*/
     line_num = 2;
     text_mk.color = Color::Blue();
-    text_mk.text = "[Front-end w/]";
+    text_mk.text = "[Front-end]";
     text_mk.pose.position.x = x_base + vertical_diff * line_num;
     text_mk.pose.position.y = - y_diff;
     text_mk.pose.position.z = z_base + vertical_diff * line_num;
@@ -885,15 +865,15 @@ void VisualRviz::visualizeText(const std::vector<std::string> &texts, const std:
 
     /*line 3*/
     line_num = 1;
-    text_mk.color = Color::Orange();
-    text_mk.text = "[Front-end w/o]";
+    text_mk.color = Color::Red();
+    text_mk.text = "[Back-end]";
     text_mk.pose.position.x = x_base + vertical_diff * line_num;
     text_mk.pose.position.y = - y_diff;
     text_mk.pose.position.z = z_base + vertical_diff * line_num;
     text_mk.id = 5;
     mk_ary.markers.push_back(text_mk);
 
-    text_mk.color = Color::Orange();
+    text_mk.color = Color::Red();
     text_mk.text = texts[2];
     text_mk.pose.position.x = x_base + vertical_diff * line_num;
     text_mk.pose.position.y = 0;
@@ -901,7 +881,7 @@ void VisualRviz::visualizeText(const std::vector<std::string> &texts, const std:
     text_mk.id = 6;
     mk_ary.markers.push_back(text_mk);
 
-    text_mk.color = Color::Orange();
+    text_mk.color = Color::Red();
     text_mk.text = texts[3];
     text_mk.pose.position.x = x_base + vertical_diff * line_num;
     text_mk.pose.position.y = y_diff;
@@ -910,31 +890,72 @@ void VisualRviz::visualizeText(const std::vector<std::string> &texts, const std:
     mk_ary.markers.push_back(text_mk);
     /*line 3*/
 
-    /*line 4*/
-    line_num = 0;
-    text_mk.color = Color::Red();
-    text_mk.text = "[Back-end]";
-    text_mk.pose.position.x = x_base + vertical_diff * line_num;
-    text_mk.pose.position.y = - y_diff;
-    text_mk.pose.position.z = z_base + vertical_diff * line_num;
-    text_mk.id = 8;
-    mk_ary.markers.push_back(text_mk);
-
-    text_mk.color = Color::Red();
-    text_mk.text = texts[4];
-    text_mk.pose.position.x = x_base + vertical_diff * line_num;
-    text_mk.pose.position.y = 0;
-    text_mk.pose.position.z = z_base + vertical_diff * line_num;
-    text_mk.id = 9;
-    mk_ary.markers.push_back(text_mk);
-
-    text_mk.color = Color::Red();
-    text_mk.text = texts[5];
-    text_mk.pose.position.x = x_base + vertical_diff * line_num;
-    text_mk.pose.position.y = y_diff;
-    text_mk.pose.position.z = z_base + vertical_diff * line_num;
-    text_mk.id = 10;
-    mk_ary.markers.push_back(text_mk);
-    /*line 4*/
     texts_pub_.publish(mk_ary);
+}
+
+void VisualRviz::visualizeCurrExpectedState(const StatePVA& x, ros::Time local_time)
+{
+    visualization_msgs::Marker pos_point, vel_vec, acc_vec;
+    geometry_msgs::Point p, a;
+    p.x = x[0];
+    p.y = x[1];
+    p.z = x[2];
+    a.x = x[0];
+    a.y = x[1];
+    a.z = x[2];
+    pos_point.points.push_back(p);
+
+    vel_vec.points.push_back(p);
+    p.x += x[3];
+    p.y += x[4];
+    p.z += x[5];
+    vel_vec.points.push_back(p);
+
+    acc_vec.points.push_back(a);
+    a.x += x[6];
+    a.y += x[7];
+    a.z += x[8];
+    acc_vec.points.push_back(a);
+
+    pos_point.header.frame_id = "map";
+    pos_point.header.stamp = local_time;
+    pos_point.ns = "curr_exp";
+    pos_point.action = visualization_msgs::Marker::ADD;
+    pos_point.lifetime = ros::Duration(0);
+    pos_point.pose.orientation.w = 1.0;
+    pos_point.id = 100;
+    pos_point.type = visualization_msgs::Marker::POINTS;
+    pos_point.scale.x = 0.3;
+    pos_point.scale.y = 0.3;
+    pos_point.scale.z = 0.3;
+    pos_point.color.a = 1;
+    pos_point.color = Color::Red();
+
+    vel_vec.header.frame_id = "map";
+    vel_vec.header.stamp = local_time;
+    vel_vec.ns = "curr_exp";
+    vel_vec.action = visualization_msgs::Marker::ADD;
+    vel_vec.lifetime = ros::Duration(0);
+    vel_vec.pose.orientation.w = 1.0;
+    vel_vec.id = 200;
+    vel_vec.type = visualization_msgs::Marker::ARROW;
+    vel_vec.scale.x = 0.25;
+    vel_vec.scale.y = 0.35;
+    vel_vec.color = Color::Pink();
+
+    acc_vec.header.frame_id = "map";
+    acc_vec.header.stamp = local_time;
+    acc_vec.ns = "curr_exp";
+    acc_vec.action = visualization_msgs::Marker::ADD;
+    acc_vec.lifetime = ros::Duration(0);
+    acc_vec.pose.orientation.w = 1.0;
+    acc_vec.id = 300;
+    acc_vec.type = visualization_msgs::Marker::ARROW;
+    acc_vec.scale.x = 0.25;
+    acc_vec.scale.y = 0.35;
+    acc_vec.color = Color::Green();
+
+    curr_exp_pos_pub_.publish(pos_point);
+    curr_exp_vel_pub_.publish(vel_vec);
+    curr_exp_acc_pub_.publish(acc_vec);
 }

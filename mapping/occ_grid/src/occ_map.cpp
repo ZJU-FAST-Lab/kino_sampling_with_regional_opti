@@ -12,7 +12,7 @@
 //for img debug
 #include <opencv2/opencv.hpp>
 
-namespace tgk_planner
+namespace kino_planner
 {
 void OccMap::resetBuffer(Eigen::Vector3d min_pos, Eigen::Vector3d max_pos)
 {
@@ -128,8 +128,9 @@ void OccMap::localOccVisCallback(const ros::TimerEvent& e)
     for (int y = min_id(1); y < max_id(1); ++y)
       for (int z = min_id(2); z < max_id(2); ++z)
       {
-        // if (occupancy_buffer_[idxToAddress(x, y, z)] > min_occupancy_log_)
-        if (distance_buffer_[idxToAddress(x, y, z)] < 0.4)
+        if (occupancy_buffer_[idxToAddress(x, y, z)] > min_occupancy_log_)
+        // if (distance_buffer_[idxToAddress(x, y, z)] < 0.4)
+        // if (inflate_occupancy_[idxToAddress(x, y, z)] == true)
         {
           Eigen::Vector3d pos;
           indexToPos(x, y, z, pos);
@@ -490,74 +491,39 @@ inline int OccMap::setCacheOccupancy(const Eigen::Vector3d &pos, int occ)
   }
 
   if (occ == 1)
+  {
     cache_hit_[idx_ctns] += 1;
+  }
   return idx_ctns;
 }
 
-template <typename F_get_val, typename F_set_val>
-void OccMap::fillESDF(F_get_val f_get_val, F_set_val f_set_val, int start, int end, int dim) 
+void OccMap::inflate(const Eigen::Vector3i &min_idx, const Eigen::Vector3i &max_idx)
 {
-  int v[grid_size_(dim)];
-  double z[grid_size_(dim) + 1];
-
-  int k = start;
-  v[start] = start;
-  z[start] = -std::numeric_limits<double>::max();
-  z[start + 1] = std::numeric_limits<double>::max();
-
-  for (int q = start + 1; q <= end; q++) 
+  int inflate_num = ceil(infalte_length_/resolution_);
+  for (int x = min_idx[0]; x < max_idx[0]; ++x) 
   {
-    k++;
-    double s;
-    do 
+    for (int y = min_idx[1]; y < max_idx[1]; ++y) 
     {
-      k--;
-      s = ((f_get_val(q) + q * q) - (f_get_val(v[k]) + v[k] * v[k])) / (2 * q - 2 * v[k]);
-    } while (s <= z[k]);
-    k++;
-    v[k] = q;
-    z[k] = s;
-    z[k + 1] = std::numeric_limits<double>::max();
-  }
-  k = start;
-  for (int q = start; q <= end; q++) 
-  {
-    while (z[k + 1] < q) k++;
-    double val = (q - v[k]) * (q - v[k]) + f_get_val(v[k]);
-    f_set_val(q, val);
-  }
-}
-
-void OccMap::updateESDF3d(const Eigen::Vector3i &min_esdf, const Eigen::Vector3i &max_esdf) 
-{
-  /* positive distance */
-  for (int x = min_esdf[0]; x < max_esdf[0]; x++) 
-  {
-    for (int y = min_esdf[1]; y < max_esdf[1]; y++) 
-    {
-      fillESDF([&](int z) {return occupancy_buffer_[idxToAddress(x, y, z)] > min_occupancy_log_ ? 0 : std::numeric_limits<double>::max(); },
-               [&](int z, double val) { tmp_buffer1_[idxToAddress(x, y, z)] = val; }, // lambda expressions. Anonymous inline function
-               min_esdf[2], max_esdf[2], 2);
-    }
-  }
-
-  for (int x = min_esdf[0]; x < max_esdf[0]; x++) 
-  {
-    for (int z = min_esdf[2]; z < max_esdf[2]; z++) 
-    {
-      fillESDF([&](int y) { return tmp_buffer1_[idxToAddress(x, y, z)]; },
-               [&](int y, double val) { tmp_buffer2_[idxToAddress(x, y, z)] = val; }, 
-               min_esdf[1], max_esdf[1], 1);
-    }
-  }
-
-  for (int y = min_esdf[1]; y < max_esdf[1]; y++) 
-  {
-    for (int z = min_esdf[2]; z < max_esdf[2]; z++) 
-    {
-      fillESDF([&](int x) { return tmp_buffer2_[idxToAddress(x, y, z)]; },
-               [&](int x, double val) { distance_buffer_[idxToAddress(x, y, z)] = resolution_ * std::sqrt(val); },
-               min_esdf[0], max_esdf[0], 0);
+      for (int z = min_idx[2]; z < max_idx[2]; ++z) 
+      {
+        if (occupancy_buffer_[idxToAddress(x, y, z)] > min_occupancy_log_)
+        {
+          for (int x_diff = -inflate_num; x_diff <= inflate_num; ++x_diff)
+          {
+            for (int y_diff = -inflate_num; y_diff <= inflate_num; ++y_diff)
+            {
+              for (int z_diff = -inflate_num; z_diff <= inflate_num; ++z_diff)
+              {
+                Eigen::Vector3i idx(x + x_diff, y + y_diff, z + z_diff);
+                int address = idxToAddress(idx);
+                if (!isInMap(idx))
+                  continue;
+                inflate_occupancy_[address] = true;
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
@@ -624,7 +590,7 @@ void OccMap::indepOdomCallback(const nav_msgs::OdometryConstPtr& odom)
 
 void OccMap::globalCloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
 {
-  ROS_ERROR_STREAM("use_global_map_: " << use_global_map_ << ", has_global_cloud_: " << has_global_cloud_);
+  // ROS_ERROR_STREAM("use_global_map_: " << use_global_map_ << ", has_global_cloud_: " << has_global_cloud_);
 
   if(!use_global_map_ || has_global_cloud_)
     return;
@@ -632,7 +598,7 @@ void OccMap::globalCloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
 	pcl::PointCloud<pcl::PointXYZ> global_cloud;
   pcl::fromROSMsg(*msg, global_cloud);
   global_map_valid_ = true;
-  ROS_ERROR_STREAM(", global_cloud.points.size(): " << global_cloud.points.size());
+  // ROS_ERROR_STREAM(", global_cloud.points.size(): " << global_cloud.points.size());
   
   if (global_cloud.points.size() == 0)
     return;
@@ -648,12 +614,12 @@ void OccMap::globalCloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
   has_global_cloud_ = true;
   global_cloud_sub_.shutdown();
 
-  std::cout << "start compute global edf, grid size: " << grid_size_.transpose() << "\n";
-  auto ts_global_edf = std::chrono::high_resolution_clock::now();
-  updateESDF3d(Eigen::Vector3i(0,0,0), grid_size_ - Eigen::Vector3i(1,1,1));
-  auto te_global_edf = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double> diff_global_edf = te_global_edf - ts_global_edf;
-  std::cout << "compute global edf: " << diff_global_edf.count() * 1e3 << " ms\n";
+  std::cout << "start inflate" << "\n";
+  auto ts_global_inflate = std::chrono::high_resolution_clock::now();
+  inflate(Eigen::Vector3i(0,0,0), grid_size_);
+  auto te_global_inflate = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> diff_global_inflate = te_global_inflate - ts_global_inflate;
+  std::cout << "inflate: " << diff_global_inflate.count() * 1e3 << " ms\n";
 
   // store in flann kdtree for nearest query
   auto ts_filter_tree = std::chrono::high_resolution_clock::now();
@@ -671,8 +637,8 @@ void OccMap::globalCloudCallback(const sensor_msgs::PointCloud2ConstPtr& msg)
   auto te_build_tree = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> diff_filter_tree = te_filter_tree - ts_filter_tree;
   std::chrono::duration<double> diff_build_tree = te_build_tree - ts_build_tree;
-  std::cout << "filter kdtree: " << diff_filter_tree.count() * 1e6 << " us\n";
-  std::cout << "build kdtree: " << diff_build_tree.count() * 1e6 << " us\n";
+  std::cout << "filter kdtree: " << diff_filter_tree.count() * 1e3 << " ms\n";
+  std::cout << "build kdtree: " << diff_build_tree.count() * 1e3 << " ms\n";
 
   /* test time usage */
   // std::mt19937_64 gen_;     
@@ -732,6 +698,7 @@ void OccMap::init(const ros::NodeHandle& nh)
   node_.param("occ_map/clamp_min_log", clamp_min_log_, 0.12);
   node_.param("occ_map/clamp_max_log", clamp_max_log_, 0.97);
   node_.param("occ_map/min_occupancy_log", min_occupancy_log_, 0.80);
+  node_.param("occ_map/inflate_length", infalte_length_, 0.0);
 
   node_.param("occ_map/fx", fx_, -1.0);
   node_.param("occ_map/fy", fy_, -1.0);
@@ -751,6 +718,7 @@ void OccMap::init(const ros::NodeHandle& nh)
   cout << "thresh: " << min_occupancy_log_ << endl;
   cout << "skip: " << skip_pixel_ << endl;
 	cout << "sensor_range: " << sensor_range_.transpose() << endl;
+  cout << "infalte_length_: " << infalte_length_ << endl;
 
   /* ---------- setting ---------- */
   have_odom_ = false;
@@ -808,24 +776,28 @@ void OccMap::init(const ros::NodeHandle& nh)
   fill(cache_rayend_.begin(), cache_rayend_.end(), -1);
   fill(cache_traverse_.begin(), cache_traverse_.end(), -1);
 
-  tmp_buffer1_.resize(buffer_size);
-  tmp_buffer2_.resize(buffer_size);
-  distance_buffer_.resize(buffer_size);
-  fill(distance_buffer_.begin(), distance_buffer_.end(), DBL_MAX);
+  inflate_occupancy_.resize(buffer_size);
+  fill(inflate_occupancy_.begin(), inflate_occupancy_.end(), false);
 
   //set x-y boundary occ
-  // for (double cx = min_range_[0]+resolution_/2; cx <= max_range_[0]-resolution_/2; cx += resolution_)
-  //   for (double cz = min_range_[2]+resolution_/2; cz <= max_range_[2]-resolution_/2; cz += resolution_)
-  //   {
-  //     this->setOccupancy(Eigen::Vector3d(cx, min_range_[1]+resolution_/2, cz));
-  //     this->setOccupancy(Eigen::Vector3d(cx, max_range_[1]-resolution_/2, cz));
-  //   }
-  // for (double cy = min_range_[1]+resolution_/2; cy <= max_range_[1]-resolution_/2; cy += resolution_)
-  //   for (double cz = min_range_[2]+resolution_/2; cz <= max_range_[2]-resolution_/2; cz += resolution_)
-  //   {
-  //     this->setOccupancy(Eigen::Vector3d(min_range_[0]+resolution_/2, cy, cz));
-  //     this->setOccupancy(Eigen::Vector3d(max_range_[0]-resolution_/2, cy, cz));
-  //   }
+  for (double cx = min_range_[0]+resolution_/2; cx <= max_range_[0]-resolution_/2; cx += resolution_)
+    for (double cz = min_range_[2]+resolution_/2; cz <= max_range_[2]-resolution_/2; cz += resolution_)
+    {
+      this->setOccupancy(Eigen::Vector3d(cx, min_range_[1]+resolution_/2, cz));
+      this->setOccupancy(Eigen::Vector3d(cx, max_range_[1]-resolution_/2, cz));
+    }
+  for (double cy = min_range_[1]+resolution_/2; cy <= max_range_[1]-resolution_/2; cy += resolution_)
+    for (double cz = min_range_[2]+resolution_/2; cz <= max_range_[2]-resolution_/2; cz += resolution_)
+    {
+      this->setOccupancy(Eigen::Vector3d(min_range_[0]+resolution_/2, cy, cz));
+      this->setOccupancy(Eigen::Vector3d(max_range_[0]-resolution_/2, cy, cz));
+    }
+  //set z-low boundary occ
+  for (double cx = min_range_[0]+resolution_/2; cx <= max_range_[0]-resolution_/2; cx += resolution_)
+    for (double cy = min_range_[1]+resolution_/2; cy <= max_range_[1]-resolution_/2; cy += resolution_)
+    {
+      this->setOccupancy(Eigen::Vector3d(cx, cy, min_range_[2]+resolution_/2));
+    }
 
     /* ---------- sub and pub ---------- */
 	if (!use_global_map_)
@@ -852,4 +824,4 @@ void OccMap::init(const ros::NodeHandle& nh)
   cout << "map initialized: " << endl;
 }
 
-}  // namespace tgk_planner
+}  // namespace kino_planner
