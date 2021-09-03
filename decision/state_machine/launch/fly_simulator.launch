@@ -14,7 +14,7 @@
   <arg name="init_y" value="-21.0"/>
   <arg name="init_z" value="0.0"/> 
 
-  <arg name="forest" value="0"/> 
+  <arg name="forest" value="1"/> 
 
   <!-- map generation -->
   <node pkg="map_generator" name="random_forest" type="random_forest" output="screen" if="$(arg forest)">    
