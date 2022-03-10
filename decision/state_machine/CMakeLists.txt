@@ -52,12 +52,12 @@ target_link_libraries(traj_server_node
     ${catkin_LIBRARIES}
 )
 
-add_executable(pub_goal_node
-    src/pub_goal_node.cpp
-)
-target_link_libraries(pub_goal_node
-    ${catkin_LIBRARIES}
-)
+# add_executable(pub_goal_node
+#     src/pub_goal_node.cpp
+# )
+# target_link_libraries(pub_goal_node
+#     ${catkin_LIBRARIES}
+# )
 
 add_dependencies(
   ${catkin_EXPORTED_TARGETS}

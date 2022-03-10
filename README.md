@@ -1,4 +1,4 @@
-# kRRT* with Bidirectional Search and Regional Optimization
+# kRRT* with Fast Regional Optimization and Post Refining
 
 ##  About
 Planning global kinodynamic trajectories for multirotor flight. 
@@ -7,7 +7,8 @@ Suits Long range and trapped starts & goals.
 __Authors__: [Hongkai YE](https://kyleyehh.github.io/) and [Fei GAO](https://ustfei.com/) from the [ZJU Fast Lab](http://www.kivact.com/).
 
 __Related Paper__:
-Efficient Sampling-based Kinodynamic Planning with Regional Optimization and Bidirectional Search for Multirotors (Preprint coming soon).
+
+[Efﬁcient Sampling-based Multirotors Kinodynamic Planning with Fast Regional Optimization and Post Reﬁning](https://github.com/ZJU-FAST-Lab/kino_sampling_with_regional_opti/blob/main/misc/draft.pdf)
 
 <p align="center">
   <img src="misc/392_2x.gif" width = "480" height = "203"/>

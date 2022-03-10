@@ -3,14 +3,14 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.3)
 SET(CMAKE_BUILD_TYPE Release) # Release, RelWithDebInfo
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-#set(ENABLE_CUDA false)
-set(ENABLE_CUDA true)
+set(ENABLE_CUDA false)
+#set(ENABLE_CUDA true)
 
 if(ENABLE_CUDA)
   find_package(CUDA REQUIRED)
   SET(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-O3 -use_fast_math)
-  list(APPEND CUDA_NVCC_FLAGS -arch=sm_30)
-  list(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_30,code=sm_30)
+  list(APPEND CUDA_NVCC_FLAGS -arch=sm_70)
+  list(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_70,code=sm_70)
   SET(CUDA_PROPAGATE_HOST_FLAGS OFF)
 
   find_package(OpenCV REQUIRED)
