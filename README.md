@@ -2,7 +2,7 @@
 
 ##  About
 Planning global kinodynamic trajectories for multirotor flight. 
-Suits Long range and trapped starts & goals.
+Suits scenarios of long range planning and trapped starts & goals.
 
 __Authors__: [Hongkai YE](https://kyleyehh.github.io/) and [Fei GAO](https://ustfei.com/) from the [ZJU Fast Lab](http://www.kivact.com/).
 
